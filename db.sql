@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 02-03-2026 a las 00:54:02
+-- Tiempo de generación: 02-03-2026 a las 21:37:49
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.0.30
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,6 +24,33 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `cancion`
+--
+
+CREATE TABLE `cancion` (
+  `id_cancion` int(11) NOT NULL,
+  `doc_identidad` int(12) NOT NULL,
+  `nombre_can` text NOT NULL,
+  `Link_can` text NOT NULL,
+  `numero_fila` int(3) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `detalle_venta`
+--
+
+CREATE TABLE `detalle_venta` (
+  `id_detalleventa` int(11) NOT NULL,
+  `cod_producto` int(12) NOT NULL,
+  `cantidad` int(3) NOT NULL CHECK (`cantidad` >= 0),
+  `precio_produc` decimal(10,2) NOT NULL CHECK (`precio_produc` >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `horario`
 --
 
@@ -34,18 +61,6 @@ CREATE TABLE `horario` (
   `hora_entrada` time NOT NULL,
   `hora_salida` time NOT NULL,
   `estado` tinyint(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `inventario`
---
-
-CREATE TABLE `inventario` (
-  `cod_inventario` int(12) NOT NULL,
-  `cod_producto` int(12) NOT NULL,
-  `stock` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -78,6 +93,21 @@ CREATE TABLE `metodo_pago` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `movimiento`
+--
+
+CREATE TABLE `movimiento` (
+  `id_movimiento` int(11) NOT NULL,
+  `cod_producto` int(12) NOT NULL,
+  `cantidad` int(3) NOT NULL,
+  `fecha_registro` datetime DEFAULT current_timestamp(),
+  `tipo_movimiento` enum('Entrada','Salida','Novedad') DEFAULT NULL,
+  `descrip_movimineto` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `parqueadero`
 --
 
@@ -99,7 +129,9 @@ CREATE TABLE `producto` (
   `nombre_produc` varchar(100) NOT NULL,
   `presentacion_produc` varchar(50) NOT NULL,
   `precio_produc` decimal(10,2) NOT NULL,
-  `estado_produc` tinyint(1) DEFAULT 1
+  `estado_produc` tinyint(1) DEFAULT 1,
+  `stock` int(4) NOT NULL,
+  `cantidad` int(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -158,10 +190,10 @@ CREATE TABLE `venta` (
   `reserva_id` int(11) DEFAULT NULL,
   `doc_identidad` int(12) NOT NULL,
   `cod_metodopago` int(12) DEFAULT NULL,
-  `cod_inventario` int(12) DEFAULT NULL,
   `fecha` datetime DEFAULT current_timestamp(),
   `total` decimal(10,2) NOT NULL,
-  `estado` enum('Pendiente','Pagada','Anulada') DEFAULT 'Pendiente'
+  `estado` enum('Pendiente','Pagada','Anulada') DEFAULT 'Pendiente',
+  `id_detalleventas` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -169,18 +201,25 @@ CREATE TABLE `venta` (
 --
 
 --
+-- Indices de la tabla `cancion`
+--
+ALTER TABLE `cancion`
+  ADD PRIMARY KEY (`id_cancion`),
+  ADD KEY `cancion_usuario` (`doc_identidad`);
+
+--
+-- Indices de la tabla `detalle_venta`
+--
+ALTER TABLE `detalle_venta`
+  ADD PRIMARY KEY (`id_detalleventa`),
+  ADD KEY `detalleventa_producto` (`cod_producto`);
+
+--
 -- Indices de la tabla `horario`
 --
 ALTER TABLE `horario`
   ADD PRIMARY KEY (`id_horario`),
   ADD KEY `horario_usuario` (`doc_identidad`);
-
---
--- Indices de la tabla `inventario`
---
-ALTER TABLE `inventario`
-  ADD PRIMARY KEY (`cod_inventario`),
-  ADD KEY `inventario_producto` (`cod_producto`);
 
 --
 -- Indices de la tabla `mesa`
@@ -193,6 +232,13 @@ ALTER TABLE `mesa`
 --
 ALTER TABLE `metodo_pago`
   ADD PRIMARY KEY (`cod_metodopago`);
+
+--
+-- Indices de la tabla `movimiento`
+--
+ALTER TABLE `movimiento`
+  ADD PRIMARY KEY (`id_movimiento`),
+  ADD KEY `movimiento_producto` (`cod_producto`);
 
 --
 -- Indices de la tabla `parqueadero`
@@ -235,18 +281,36 @@ ALTER TABLE `venta`
   ADD PRIMARY KEY (`id_venta`),
   ADD KEY `venta_usuario` (`doc_identidad`),
   ADD KEY `venta_metodopago` (`cod_metodopago`),
-  ADD KEY `venta_inventario` (`cod_inventario`),
-  ADD KEY `venta_reserva` (`reserva_id`);
+  ADD KEY `venta_reserva` (`reserva_id`),
+  ADD KEY `venta_ventadetalle` (`id_detalleventas`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
 --
+-- AUTO_INCREMENT de la tabla `cancion`
+--
+ALTER TABLE `cancion`
+  MODIFY `id_cancion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `detalle_venta`
+--
+ALTER TABLE `detalle_venta`
+  MODIFY `id_detalleventa` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `horario`
 --
 ALTER TABLE `horario`
   MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `movimiento`
+--
+ALTER TABLE `movimiento`
+  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `reserva`
@@ -265,16 +329,28 @@ ALTER TABLE `venta`
 --
 
 --
+-- Filtros para la tabla `cancion`
+--
+ALTER TABLE `cancion`
+  ADD CONSTRAINT `cancion_usuario` FOREIGN KEY (`doc_identidad`) REFERENCES `usuario` (`doc_identidad`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `detalle_venta`
+--
+ALTER TABLE `detalle_venta`
+  ADD CONSTRAINT `detalleventa_producto` FOREIGN KEY (`cod_producto`) REFERENCES `producto` (`cod_producto`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Filtros para la tabla `horario`
 --
 ALTER TABLE `horario`
   ADD CONSTRAINT `horario_usuario` FOREIGN KEY (`doc_identidad`) REFERENCES `usuario` (`doc_identidad`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Filtros para la tabla `inventario`
+-- Filtros para la tabla `movimiento`
 --
-ALTER TABLE `inventario`
-  ADD CONSTRAINT `inventario_producto` FOREIGN KEY (`cod_producto`) REFERENCES `producto` (`cod_producto`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `movimiento`
+  ADD CONSTRAINT `movimiento_producto` FOREIGN KEY (`cod_producto`) REFERENCES `producto` (`cod_producto`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `reserva`
@@ -294,13 +370,12 @@ ALTER TABLE `usuario`
 -- Filtros para la tabla `venta`
 --
 ALTER TABLE `venta`
-  ADD CONSTRAINT `venta_inventario` FOREIGN KEY (`cod_inventario`) REFERENCES `inventario` (`cod_inventario`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `venta_metodopago` FOREIGN KEY (`cod_metodopago`) REFERENCES `metodo_pago` (`cod_metodopago`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `venta_reserva` FOREIGN KEY (`reserva_id`) REFERENCES `reserva` (`id_reserva`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `venta_usuario` FOREIGN KEY (`doc_identidad`) REFERENCES `usuario` (`doc_identidad`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `venta_usuario` FOREIGN KEY (`doc_identidad`) REFERENCES `usuario` (`doc_identidad`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `venta_ventadetalle` FOREIGN KEY (`id_detalleventas`) REFERENCES `detalle_venta` (`id_detalleventa`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
