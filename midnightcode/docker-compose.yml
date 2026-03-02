@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: node_app
+    restart: unless-stopped
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    ports:
+      - "${PORT}:${PORT}"
+    networks:
+      - node_network
+
+  db:
+    image: mysql:8.0
+    container_name: node_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - node_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: node_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    depends_on:
+      - db
+    networks:
+      - node_network
+
+volumes:
+  dbdata:
+
+networks:
+  node_network:
