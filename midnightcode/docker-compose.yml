@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   app:
     build:
@@ -8,8 +10,11 @@ services:
     working_dir: /usr/src/app
     volumes:
       - .:/usr/src/app
-    env_file:
-      - ./.env
+    environment:
+      DATABASE_URL: mysql://root:root@db:3306/midnightcode
+      DB_ROOT_PASSWORD: root
+      DB_NAME: midnightcode
+      PORT: 3000
     depends_on:
       - db
     ports:
@@ -22,8 +27,8 @@ services:
     container_name: node_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: midnightcode
     volumes:
       - dbdata:/var/lib/mysql
     ports:
@@ -39,7 +44,7 @@ services:
       - "8080:80"
     environment:
       PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: root
     depends_on:
       - db
     networks:
@@ -50,3 +55,4 @@ volumes:
 
 networks:
   node_network:
+    driver: bridge
