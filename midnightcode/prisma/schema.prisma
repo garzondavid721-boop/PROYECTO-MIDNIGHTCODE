@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Horario {
+  id_horario    Int      @id @default(autoincrement())
+  doc_identidad Int
+  dia_semana    DiaSemana
+  hora_entrada  String
+  hora_salida   String
+  estado        Boolean  @default(true)
+}
+
+enum DiaSemana {
+  Lunes
+  Martes
+  Miercoles
+  Jueves
+  Viernes
+  Sabado
+  Domingo
+}
