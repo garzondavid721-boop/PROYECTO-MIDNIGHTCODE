@@ -1,49 +1,42 @@
 const horarioService = require('../services/horarioService');
+const horarioSchema = require('../validators/horarioSchema');
 
 class HorarioController {
-  async getAll(req, res) {
+
+  async getAll(req, res, next) {
     try {
       const horarios = await horarioService.getAll();
       res.json(horarios);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   }
 
-  async getById(req, res) {
+  async getById(req, res, next) {
     try {
-      const horario = await horarioService.getById(parseInt(req.params.id));
-      if (!horario) return res.status(404).json({ error: 'Horario no encontrado' });
+      const horario = await horarioService.getById(
+        parseInt(req.params.id),
+        req.user
+      );
       res.json(horario);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   }
 
-  async create(req, res) {
+  async create(req, res, next) {
     try {
-      const horario = await horarioService.create(req.body);
+
+      const parsed = horarioSchema.safeParse(req.body);
+
+      if (!parsed.success)
+        return res.status(400).json(parsed.error);
+
+      const horario = await horarioService.create(parsed.data);
       res.status(201).json(horario);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  }
 
-  async update(req, res) {
-    try {
-      const horario = await horarioService.update(parseInt(req.params.id), req.body);
-      res.json(horario);
     } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  }
-
-  async delete(req, res) {
-    try {
-      await horarioService.delete(parseInt(req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   }
 }

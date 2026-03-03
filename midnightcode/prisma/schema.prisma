@@ -8,37 +8,37 @@ datasource db {
 }
 
 model Rol {
-  cod_rol     Int      @id @default(autoincrement())
-  nombre_rol  String   @db.VarChar(50)
-  descrip_rol String?  @db.VarChar(100)
+  cod_rol     Int     @id @default(autoincrement()) @db.Int
+  nombre_rol  String  @db.VarChar(50)
+  descrip_rol String? @db.VarChar(100)
 
   usuarios Usuario[]
 }
 
 model Usuario {
-  doc_identidad Int     @id
-  cod_rol       Int
+  doc_identidad Int     @id @db.Int
+  cod_rol       Int     @db.Int
   nombre_usu    String  @db.VarChar(100)
   telefono_usu  String? @db.VarChar(15)
   correo_usu    String  @unique @db.VarChar(100)
   password_usu  String  @db.VarChar(255)
 
-  rol      Rol      @relation(fields: [cod_rol], references: [cod_rol])
-  horarios Horario[]
-  reservas Reserva[]
-  ventas   Venta[]
+  rol       Rol       @relation(fields: [cod_rol], references: [cod_rol], onDelete: Cascade)
+  horarios  Horario[]
+  reservas  Reserva[]
+  ventas    Venta[]
   canciones Cancion[]
 
   @@index([cod_rol])
 }
 
 model Horario {
-  id_horario    Int      @id @default(autoincrement())
-  doc_identidad Int
+  id_horario    Int      @id @default(autoincrement()) @db.Int
+  doc_identidad Int      @db.Int
   dia_semana    DiaSemana
-  hora_entrada  DateTime @db.Time
-  hora_salida   DateTime @db.Time
-  estado        Boolean  @default(true)
+  hora_entrada  DateTime @db.Time(0)
+  hora_salida   DateTime @db.Time(0)
+  estado        Boolean  @default(true) @db.TinyInt
 
   usuario Usuario @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
 
@@ -46,35 +46,35 @@ model Horario {
 }
 
 model Mesa {
-  cod_mesa        Int      @id @default(autoincrement())
-  numero_mesa     Int
-  tipo_mesa       TipoMesa
-  capacidad_mesa  Int
-  estado_mesa     Boolean  @default(true)
-  precio_reserva  Decimal  @db.Decimal(10,2)
+  cod_mesa       Int     @id @default(autoincrement()) @db.Int
+  numero_mesa    Int     @db.Int
+  tipo_mesa      TipoMesa
+  capacidad_mesa Int     @db.Int
+  estado_mesa    Boolean @default(true) @db.TinyInt
+  precio_reserva Decimal @default(0.00) @db.Decimal(10,2)
 
   reservas Reserva[]
 }
 
 model Parqueadero {
-  cod_parqueadero   Int      @id @default(autoincrement())
-  numero_par        Int
-  estado_par        Boolean  @default(true)
-  precio_parqueadero Decimal @db.Decimal(10,2)
+  cod_parqueadero    Int     @id @default(autoincrement()) @db.Int
+  numero_par         Int     @db.Int
+  estado_par         Boolean @default(true) @db.TinyInt
+  precio_parqueadero Decimal @default(0.00) @db.Decimal(10,2)
 
   reservas Reserva[]
 }
 
 model Reserva {
-  id_reserva       Int      @id @default(autoincrement())
-  doc_identidad    Int
-  cod_mesa         Int
-  cod_parqueadero  Int?
-  fecha_reserva    DateTime @db.Date
-  hora_reserva     DateTime @db.Time
-  cantidad_personas Int
-  incluye_cover    Boolean  @default(true)
-  estado           EstadoReserva @default(Pendiente)
+  id_reserva        Int      @id @default(autoincrement()) @db.Int
+  doc_identidad     Int      @db.Int
+  cod_mesa          Int      @db.Int
+  cod_parqueadero   Int?     @db.Int
+  fecha_reserva     DateTime @db.Date
+  hora_reserva      DateTime @db.Time(0)
+  cantidad_personas Int      @db.Int
+  incluye_cover     Boolean  @default(true) @db.TinyInt
+  estado            EstadoReserva @default(Pendiente)
 
   usuario     Usuario     @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
   mesa        Mesa        @relation(fields: [cod_mesa], references: [cod_mesa], onDelete: Cascade)
@@ -84,35 +84,36 @@ model Reserva {
 
   @@index([doc_identidad])
   @@index([cod_mesa])
+  @@index([cod_parqueadero])
 }
 
 model MetodoPago {
-  cod_metodopago Int     @id @default(autoincrement())
+  cod_metodopago Int     @id @default(autoincrement()) @db.Int
   nombre         String  @db.VarChar(50)
-  estado         Boolean @default(true)
+  estado         Boolean @default(true) @db.TinyInt
 
   ventas Venta[]
 }
 
 model Producto {
-  cod_producto        Int      @id @default(autoincrement())
-  nombre_produc       String   @db.VarChar(100)
-  presentacion_produc String   @db.VarChar(50)
-  precio_produc       Decimal  @db.Decimal(10,2)
-  estado_produc       Boolean  @default(true)
-  stock               Int
-  cantidad            Int
+  cod_producto        Int     @id @default(autoincrement()) @db.Int
+  nombre_produc       String  @db.VarChar(100)
+  presentacion_produc String  @db.VarChar(50)
+  precio_produc       Decimal @db.Decimal(10,2)
+  estado_produc       Boolean @default(true) @db.TinyInt
+  stock               Int     @db.Int
+  cantidad            Int     @db.Int
 
   detalles   DetalleVenta[]
   movimientos Movimiento[]
 }
 
 model Venta {
-  id_venta       Int      @id @default(autoincrement())
-  reserva_id     Int?
-  doc_identidad  Int
-  cod_metodopago Int?
-  fecha          DateTime @default(now())
+  id_venta       Int      @id @default(autoincrement()) @db.Int
+  reserva_id     Int?     @db.Int
+  doc_identidad  Int      @db.Int
+  cod_metodopago Int?     @db.Int
+  fecha          DateTime @default(now()) @db.DateTime(0)
   total          Decimal  @db.Decimal(10,2)
   estado         EstadoVenta @default(Pendiente)
 
@@ -123,13 +124,15 @@ model Venta {
   detalles DetalleVenta[]
 
   @@index([doc_identidad])
+  @@index([cod_metodopago])
+  @@index([reserva_id])
 }
 
 model DetalleVenta {
-  id_detalleventa Int     @id @default(autoincrement())
-  id_venta        Int
-  cod_producto    Int
-  cantidad        Int
+  id_detalleventa Int     @id @default(autoincrement()) @db.Int
+  id_venta        Int     @db.Int
+  cod_producto    Int     @db.Int
+  cantidad        Int     @db.Int
   precio_produc   Decimal @db.Decimal(10,2)
 
   venta    Venta    @relation(fields: [id_venta], references: [id_venta], onDelete: Cascade)
@@ -140,33 +143,37 @@ model DetalleVenta {
 }
 
 model Movimiento {
-  id_movimiento     Int      @id @default(autoincrement())
-  cod_producto      Int
-  cantidad          Int
-  fecha_registro    DateTime @default(now())
-  tipo_movimiento   TipoMovimiento
-  descrip_movimineto String
+  id_movimiento      Int      @id @default(autoincrement()) @db.Int
+  cod_producto       Int      @db.Int
+  cantidad           Int      @db.Int
+  fecha_registro     DateTime @default(now()) @db.DateTime(0)
+  tipo_movimiento    TipoMovimiento?
+  descrip_movimineto String   @db.Text
 
   producto Producto @relation(fields: [cod_producto], references: [cod_producto], onDelete: Cascade)
+
+  @@index([cod_producto])
 }
 
 model Cancion {
-  id_cancion     Int  @id @default(autoincrement())
-  doc_identidad  Int
-  nombre_can     String
-  Link_can       String
-  numero_fila    Int
+  id_cancion    Int    @id @default(autoincrement()) @db.Int
+  doc_identidad Int    @db.Int
+  nombre_can    String @db.Text
+  Link_can      String @db.Text
+  numero_fila   Int    @db.Int
 
   usuario Usuario @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
+
+  @@index([doc_identidad])
 }
 
 model Auditoria {
-  id_auditoria      Int      @id @default(autoincrement())
-  tabla_afectada    String?
-  accion            TipoAccion?
-  usuario_afectado  Int?
-  fecha             DateTime @default(now())
-  descripcion       String?
+  id_auditoria     Int      @id @default(autoincrement()) @db.Int
+  tabla_afectada   String?  @db.VarChar(50)
+  accion           TipoAccion?
+  usuario_afectado Int?     @db.Int
+  fecha            DateTime @default(now()) @db.DateTime(0)
+  descripcion      String?  @db.Text
 }
 enum DiaSemana {
   Lunes
@@ -192,13 +199,12 @@ enum EstadoReserva {
 enum EstadoVenta {
   Pendiente
   Pagada
-  Anulada
+  Cancelada
 }
 
 enum TipoMovimiento {
   Entrada
   Salida
-  Novedad
 }
 
 enum TipoAccion {
