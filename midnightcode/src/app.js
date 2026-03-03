@@ -9,6 +9,10 @@ const horarioRoutes = require('./routes/horarioRoutes');
 
 const app = express();
 
+const usuarioRoutes = require('./routes/usuarioRoutes');
+
+app.use('/api/usuarios', usuarioRoutes);   
+
 app.use(cors());
 app.use(express.json());
 
