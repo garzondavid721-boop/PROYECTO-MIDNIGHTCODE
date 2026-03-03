@@ -15,6 +15,7 @@ services:
       DB_ROOT_PASSWORD: root
       DB_NAME: midnightcode
       PORT: 3000
+      JWT_SECRET: 9fK$2vLmQ8#xT7zP@rW5!uY3cN6*eA1
     depends_on:
       - db
     ports:

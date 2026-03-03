@@ -17,6 +17,7 @@ class AuthService {
 
     if (!match) throw new Error('Credenciales inválidas');
 
+  
     const token = jwt.sign(
       {
         id: user.doc_identidad,
@@ -26,9 +27,9 @@ class AuthService {
       { expiresIn: '8h' }
     );
 
-    return token
 
-    return { token };
+
+    return { token};
   }
 }
 
