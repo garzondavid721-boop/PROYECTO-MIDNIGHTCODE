@@ -26,6 +26,8 @@ class AuthService {
       { expiresIn: '8h' }
     );
 
+    return token
+
     return { token };
   }
 }
