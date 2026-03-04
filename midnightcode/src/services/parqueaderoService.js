@@ -1,4 +1,4 @@
-const mesaRepo = require('../repositories/parqueaderoRepository');
+const parqueaderoRepo = require('../repositories/parqueaderoRepository');
 
 class ParqueaderoService {
 

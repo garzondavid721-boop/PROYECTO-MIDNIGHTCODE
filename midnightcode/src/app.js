@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./jobs/liberarReservasJob');
 const express = require('express');
 const cors = require('cors');
 const logger = require('./config/logger');
@@ -17,7 +18,11 @@ const app = express();
 
 const usuarioRoutes = require('./routes/usuarioRoutes');
 
+const rolRoutes = require('./routes/rolRoutes');
+app.use('/api/roles', rolRoutes);
+
 app.use('/api/usuarios', usuarioRoutes);   
+
 
 app.use(cors());
 app.use(express.json());
@@ -29,6 +34,11 @@ app.use('/api/mesas', mesaRoutes);
 app.use('/api/parqueaderos', parqueaderoRoutes);
 app.use('/api/reservas', reservaRoutes);
 
+app.use((req, res, next) => {
+  res.status(404).json({
+    message: "Ruta no encontrada"
+  });
+});
 app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 3000;

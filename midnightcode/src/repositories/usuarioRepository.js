@@ -16,10 +16,11 @@ class UsuarioRepository {
   }
 
   async findByEmail(correo) {
-    return await prisma.usuario.findUnique({
-      where: { correo_usu: correo }
-    });
-  }
+  return await prisma.usuario.findUnique({
+    where: { correo_usu: correo },
+    include: { rol: true }
+  });
+}
 
   async create(data) {
     return await prisma.usuario.create({ data });

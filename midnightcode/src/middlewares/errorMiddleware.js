@@ -4,7 +4,10 @@ module.exports = (err, req, res, next) => {
 
   logger.error(err.message);
 
-  res.status(500).json({
+  const statusCode = err.statusCode || 500;
+
+  res.status(statusCode).json({
+    success: false,
     message: err.message || 'Error interno del servidor'
   });
 };

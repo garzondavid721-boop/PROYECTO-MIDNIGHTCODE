@@ -23,7 +23,7 @@ class UsuarioService {
     if (!valid) throw new Error("Credenciales incorrectas");
 
     const token = jwt.sign(
-      { id: user.doc_identidad, rol: user.cod_rol },
+      { id: user.doc_identidad, rol: user.rol.nombre },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
