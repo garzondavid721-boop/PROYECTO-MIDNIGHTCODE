@@ -30,7 +30,14 @@ class ReservaService {
         data: { estado_par: false }
       });
     }
-
+    const prisma = require('../config/prisma'); // o donde tengas prisma
+    exports.getById = async (id) => {
+    return await prisma.reserva.findUnique({
+       where: {
+          id_reserva: Number(id)
+        }
+  });
+};
     const expiracion = new Date(Date.now() + 15 * 60 * 1000);
 
     return reservaRepo.create({
@@ -40,12 +47,14 @@ class ReservaService {
     });
   }
 
+
   getAll(user) {
     if (user.rol === 'ADMIN' || user.rol === 'EMPLEADO')
       return reservaRepo.findAll();
 
     return reservaRepo.findByUser(user.id);
   }
+  
 }
 
 module.exports = new ReservaService();
