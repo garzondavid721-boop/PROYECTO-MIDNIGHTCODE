@@ -14,10 +14,13 @@ class AuthService {
     if (!user) throw new Error('Credenciales inválidas');
 
     const match = await bcrypt.compare(password, user.password_usu);
-
     if (!match) throw new Error('Credenciales inválidas');
 
-  
+    
+    if (!user.rol) {
+      throw new Error('El usuario no tiene rol asignado');
+    }
+
     const token = jwt.sign(
       {
         id: user.doc_identidad,
@@ -27,9 +30,10 @@ class AuthService {
       { expiresIn: '15m' }
     );
 
-
-
-    return { token,rol: user.rol.nombre_rol};
+    return { 
+      token,
+      rol: user.rol.nombre_rol
+    };
   }
 }
 
