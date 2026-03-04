@@ -7,6 +7,12 @@ const errorMiddleware = require('./middlewares/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const horarioRoutes = require('./routes/horarioRoutes');
 
+const parqueaderoRoutes = require('./routes/parqueaderoRoutes');
+const mesaRoutes = require('./routes/mesaRoutes');
+const reservaRoutes = require('./routes/reservaRoutes');
+
+
+
 const app = express();
 
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -18,6 +24,10 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/horarios', horarioRoutes);
+
+app.use('/api/mesas', mesaRoutes);
+app.use('/api/parqueaderos', parqueaderoRoutes);
+app.use('/api/reservas', reservaRoutes);
 
 app.use(errorMiddleware);
 

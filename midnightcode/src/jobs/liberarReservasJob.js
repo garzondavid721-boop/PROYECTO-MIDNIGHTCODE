@@ -13,25 +13,25 @@ setInterval(async () => {
     }
   });
 
-  for (const reserva of expiradas) {
+  for (const r of expiradas) {
 
     await prisma.mesa.update({
-      where: { cod_mesa: reserva.cod_mesa },
-      data: { estado_mesa: 1 }
+      where: { cod_mesa: r.cod_mesa },
+      data: { estado_mesa: true }
     });
 
-    if (reserva.cod_parqueadero) {
+    if (r.cod_parqueadero) {
       await prisma.parqueadero.update({
-        where: { cod_parqueadero: reserva.cod_parqueadero },
-        data: { estado_par: 1 }
+        where: { cod_parqueadero: r.cod_parqueadero },
+        data: { estado_par: true }
       });
     }
 
     await prisma.reserva.update({
-      where: { id_reserva: reserva.id_reserva },
+      where: { id_reserva: r.id_reserva },
       data: { estado: 'Cancelada' }
     });
-
+    
   }
 
-}, 60000); // revisa cada minuto
+}, 60000);
