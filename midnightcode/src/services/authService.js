@@ -24,7 +24,7 @@ class AuthService {
         rol: user.rol.nombre_rol
       },
       process.env.JWT_SECRET,
-      { expiresIn: '8h' }
+      { expiresIn: '15m' }
     );
 
 

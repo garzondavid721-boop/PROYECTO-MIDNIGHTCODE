@@ -64,7 +64,11 @@ model Parqueadero {
 
   reservas Reserva[]
 }
-
+model TokenBlacklist {
+  id        Int      @id @default(autoincrement())
+  token     String   @db.Text
+  createdAt DateTime @default(now())
+}
 model Reserva {
   id_reserva        Int      @id @default(autoincrement()) @db.Int
   doc_identidad     Int      @db.Int

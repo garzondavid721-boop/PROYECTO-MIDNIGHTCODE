@@ -1,19 +1,28 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const prisma = require("../config/database");
 
-module.exports = (req, res, next) => {
-
+module.exports = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader)
-    return res.status(401).json({ message: 'Token requerido' });
+    return res.status(401).json({ message: "Token requerido" });
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
 
   try {
+    const blacklisted = await prisma.tokenBlacklist.findFirst({
+      where: { token }
+    });
+
+    if (blacklisted)
+      return res.status(401).json({ message: "Token inválido (logout)" });
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     req.user = decoded;
     next();
+
   } catch (error) {
-    return res.status(403).json({ message: 'Token inválido' });
+    return res.status(401).json({ message: "Sesión expirada" });
   }
 };

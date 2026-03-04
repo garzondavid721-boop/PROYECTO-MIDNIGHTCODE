@@ -25,7 +25,7 @@ class UsuarioService {
     const token = jwt.sign(
       { id: user.doc_identidad, rol: user.cod_rol },
       process.env.JWT_SECRET,
-      { expiresIn: "8h" }
+      { expiresIn: "15m" }
     );
 
     return { token };
