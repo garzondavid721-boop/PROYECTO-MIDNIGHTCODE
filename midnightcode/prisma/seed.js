@@ -6,130 +6,64 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Ejecutando seed...");
 
-  //////////////////////////////////////////////////
+  //////////////////////////////
   // ROLES
-  //////////////////////////////////////////////////
-
-  const adminRol = await prisma.rol.upsert({
-    where: { nombre: "ADMIN" },
-    update: {},
-    create: { nombre: "ADMIN" },
+  //////////////////////////////
+  await prisma.rol.createMany({
+    data: [
+      { cod_rol: 1, nombre_rol: "ADMIN" },
+      { cod_rol: 2, nombre_rol: "EMPLEADO" },
+      { cod_rol: 3, nombre_rol: "CLIENTE" },
+    ],
+    skipDuplicates: true,
   });
 
-  const empleadoRol = await prisma.rol.upsert({
-    where: { nombre: "EMPLEADO" },
-    update: {},
-    create: { nombre: "EMPLEADO" },
-  });
+  //////////////////////////////
+  // USUARIO ADMIN
+  //////////////////////////////
+  const hash = await bcrypt.hash("admin123", 10);
 
-  const clienteRol = await prisma.rol.upsert({
-    where: { nombre: "CLIENTE" },
-    update: {},
-    create: { nombre: "CLIENTE" },
-  });
-
-  //////////////////////////////////////////////////
-  // USUARIOS
-  //////////////////////////////////////////////////
-
-  const hash = await bcrypt.hash("123456", 10);
-
-  await prisma.usuario.upsert({
-    where: { correo: "admin@test.com" },
-    update: {},
-    create: {
-      nombre: "Admin",
-      apellido: "Principal",
-      correo: "admin@test.com",
-      password: hash,
-      telefono: "3000000000",
-      rolId: adminRol.id,
-    },
-  });
-
-  await prisma.usuario.upsert({
-    where: { correo: "empleado@test.com" },
-    update: {},
-    create: {
-      nombre: "Empleado",
-      apellido: "Uno",
-      correo: "empleado@test.com",
-      password: hash,
-      telefono: "3111111111",
-      rolId: empleadoRol.id,
-    },
-  });
-
-  await prisma.usuario.upsert({
-    where: { correo: "cliente@test.com" },
-    update: {},
-    create: {
-      nombre: "Cliente",
-      apellido: "Demo",
-      correo: "cliente@test.com",
-      password: hash,
-      telefono: "3222222222",
-      rolId: clienteRol.id,
-    },
-  });
-
-  //////////////////////////////////////////////////
-  // MESAS (usa numero porque es @unique)
-  //////////////////////////////////////////////////
-
-  for (let i = 1; i <= 5; i++) {
-    await prisma.mesa.upsert({
-      where: { numero: i }, // ✅ numero es UNIQUE
-      update: {},
-      create: {
-        numero: i,
-        capacidad: 4,
+  await prisma.usuario.createMany({
+    data: [
+      {
+        doc_identidad: 1001,
+        cod_rol: 1,
+        nombre_usu: "Administrador",
+        correo_usu: "admin@test.com",
+        password_usu: hash,
       },
-    });
-  }
+    ],
+    skipDuplicates: true,
+  });
 
-  //////////////////////////////////////////////////
-  // PARQUEADEROS (usa numero porque es @unique)
-  //////////////////////////////////////////////////
+  //////////////////////////////
+  // MESAS (AGREGADO)
+  //////////////////////////////
+  await prisma.mesa.createMany({
+    data: [
+      { numero_mesa: 1, tipo_mesa: "Normal", capacidad_mesa: 4, precio_reserva: 20000 },
+      { numero_mesa: 2, tipo_mesa: "Normal", capacidad_mesa: 4, precio_reserva: 20000 },
+      { numero_mesa: 3, tipo_mesa: "VIP", capacidad_mesa: 6, precio_reserva: 50000 },
+      { numero_mesa: 4, tipo_mesa: "VIP", capacidad_mesa: 6, precio_reserva: 50000 },
+    ],
+    skipDuplicates: true,
+  });
 
-  for (let i = 1; i <= 5; i++) {
-    await prisma.parquadero.upsert({
-      where: { numero: i }, // ✅ numero es UNIQUE
-      update: {},
-      create: {
-        numero: i,
-      },
-    });
-  }
+  //////////////////////////////
+  // PARQUEADERO (AGREGADO)
+  //////////////////////////////
+  await prisma.parqueadero.createMany({
+    data: [
+      { numero_par: 1, precio_parqueadero: 10000 },
+      { numero_par: 2, precio_parqueadero: 10000 },
+      { numero_par: 3, precio_parqueadero: 15000 },
+    ],
+    skipDuplicates: true,
+  });
 
-  //////////////////////////////////////////////////
-  // MÉTODOS DE PAGO
-  //////////////////////////////////////////////////
-
-  const metodos = [
-    "EFECTIVO",
-    "TARJETA",
-    "TRANSFERENCIA",
-    "NEQUI",
-    "DAVIPLATA",
-  ];
-
-  for (const metodo of metodos) {
-    await prisma.metodoPago.upsert({
-      where: { tipo: metodo },
-      update: {},
-      create: { tipo: metodo },
-    });
-  }
-
-  console.log("✅ Seed completado correctamente");
+  console.log("✅ Seed completado con mesas y parqueadero");
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
