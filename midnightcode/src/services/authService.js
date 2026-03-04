@@ -29,7 +29,7 @@ class AuthService {
 
 
 
-    return { token};
+    return { token,rol: user.rol.nombre_rol};
   }
 }
 

@@ -3,13 +3,16 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 class UsuarioService {
+
   async register(data) {
     data.password_usu = await bcrypt.hash(data.password_usu, 10);
     return usuarioRepo.create(data);
   }
 
   async login(data) {
+
     const user = await usuarioRepo.findByEmail(data.correo_usu);
+
     if (!user) throw new Error("Usuario no encontrado");
 
     const valid = await bcrypt.compare(
