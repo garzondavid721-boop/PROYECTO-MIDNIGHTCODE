@@ -76,8 +76,11 @@ model Reserva {
   incluye_cover     Boolean  @default(true) @db.TinyInt
   estado            EstadoReserva @default(Pendiente)
 
-  usuario     Usuario     @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
-  mesa        Mesa        @relation(fields: [cod_mesa], references: [cod_mesa], onDelete: Cascade)
+  fecha_expiracion  DateTime? @db.DateTime(0)
+  estado_temporal   EstadoTemporal @default(Activa)
+
+  usuario     Usuario      @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
+  mesa        Mesa         @relation(fields: [cod_mesa], references: [cod_mesa], onDelete: Cascade)
   parqueadero Parqueadero? @relation(fields: [cod_parqueadero], references: [cod_parqueadero], onDelete: Cascade)
 
   ventas Venta[]
@@ -211,4 +214,8 @@ enum TipoAccion {
   INSERT
   UPDATE
   DELETE
+}
+enum EstadoTemporal {
+  Activa
+  Expirada
 }
