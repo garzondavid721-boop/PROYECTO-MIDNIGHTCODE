@@ -19,7 +19,7 @@ class ReservaService {
       throw error;
     }
 
-    //  Validar cod_mesa obligatorio
+    //  Validar cod_mesa
     if (!data.cod_mesa) {
       const error = new Error('cod_mesa es obligatorio');
       error.statusCode = 400;
@@ -34,7 +34,36 @@ class ReservaService {
       throw error;
     }
 
-    //  Validar parqueadero si se envía
+    //  Validar fecha_reserva
+    if (!data.fecha_reserva) {
+      const error = new Error('fecha_reserva es obligatoria');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    //  Validar hora_reserva
+    if (!data.hora_reserva) {
+      const error = new Error('hora_reserva es obligatoria');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    //  Validar cantidad_personas
+    if (!data.cantidad_personas) {
+      const error = new Error('cantidad_personas es obligatoria');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const cantidadPersonas = Number(data.cantidad_personas);
+
+    if (isNaN(cantidadPersonas)) {
+      const error = new Error('cantidad_personas debe ser un número válido');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    //  Validar parqueadero si viene
     let codParqueadero = null;
 
     if (data.cod_parqueadero) {
@@ -111,6 +140,10 @@ class ReservaService {
       cod_mesa: codMesa,
       cod_parqueadero: codParqueadero,
       doc_identidad: user.id,
+      fecha_reserva: new Date(data.fecha_reserva),
+      hora_reserva: new Date(data.hora_reserva),
+      cantidad_personas: cantidadPersonas,
+      incluye_cover: data.incluye_cover ?? true,
       fecha_expiracion: expiracion,
       estado: 'Pendiente'
     });

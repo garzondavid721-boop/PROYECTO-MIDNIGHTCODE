@@ -15,7 +15,7 @@ module.exports = async (req, res, next) => {
     });
 
     if (blacklisted)
-      return res.status(401).json({ message: "Token inválido (logout)" });
+      return res.status(401).json({ message: "Requiere iniciar sesión" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
