@@ -18,52 +18,29 @@ class UsuarioService {
       password_usu
     } = data;
 
-    // VALIDAR CAMPOS
-    if (!doc_identidad) {
-      throw new Error("El campo doc_identidad es obligatorio");
-    }
+    if (!doc_identidad) throw new Error("El campo doc_identidad es obligatorio");
+    if (!nombre_usu) throw new Error("El campo nombre_usu es obligatorio");
+    if (!telefono_usu) throw new Error("El campo telefono_usu es obligatorio");
+    if (!correo_usu) throw new Error("El campo correo_usu es obligatorio");
+    if (!password_usu) throw new Error("El campo password_usu es obligatorio");
 
-    if (!nombre_usu) {
-      throw new Error("El campo nombre_usu es obligatorio");
-    }
-
-    if (!telefono_usu) {
-      throw new Error("El campo telefono_usu es obligatorio");
-    }
-
-    if (!correo_usu) {
-      throw new Error("El campo correo_usu es obligatorio");
-    }
-
-    if (!password_usu) {
-      throw new Error("El campo password_usu es obligatorio");
-    }
-
-    // ROL POR DEFECTO CLIENTE
     data.cod_rol = 2;
 
-    // VALIDAR DOCUMENTO
     const existeDoc = await usuarioRepo.findById(doc_identidad);
-
     if (existeDoc) {
       throw new Error("Ya existe un usuario con ese documento, use otro");
     }
 
-    // VALIDAR TELEFONO
     const existeTelefono = await usuarioRepo.findByTelefono(telefono_usu);
-
     if (existeTelefono) {
       throw new Error("Ese número de teléfono ya está registrado");
     }
 
-    // VALIDAR CORREO
     const existeCorreo = await usuarioRepo.findByEmail(correo_usu);
-
     if (existeCorreo) {
       throw new Error("El correo ya está registrado");
     }
 
-    // ENCRIPTAR PASSWORD
     data.password_usu = await bcrypt.hash(password_usu, 10);
 
     return usuarioRepo.create(data);
@@ -104,29 +81,37 @@ class UsuarioService {
     if (requestUser.rol !== 1)
       throw new Error("No autorizado");
 
-    return usuarioRepo.findAll();
+    const users = await usuarioRepo.findAll();
+
+    return users.map(user => {
+      delete user.password_usu;
+      return user;
+    });
   }
 
   async getById(doc, requestUser) {
 
-  const docId = Number(doc);
-  const userId = Number(requestUser.id);
-  const rol = Number(requestUser.rol);
+    const docId = Number(doc);
+    const userId = Number(requestUser.id);
+    const rol = Number(requestUser.rol);
 
-  const user = await usuarioRepo.findById(docId);
+    const user = await usuarioRepo.findById(docId);
 
-  if (!user) {
-    throw new Error("Usuario no existe");
+    // ⚠️ PRIMERO validar existencia
+    if (!user) {
+      throw new Error("Usuario no existe");
+    }
+
+    // ⚠️ DESPUÉS permisos
+    if (rol !== 1 && userId !== docId) {
+      throw new Error("No autorizado");
+    }
+
+    // ⚠️ OCULTAR PASSWORD
+    delete user.password_usu;
+
+    return user;
   }
-
-  // admin puede ver cualquiera
-  // usuario solo puede verse a sí mismo
-  if (rol !== 1 && userId !== docId) {
-    throw new Error("No autorizado");
-  }
-
-  return user;
-}
 
   async update(doc, data, requestUser) {
 
@@ -145,7 +130,11 @@ class UsuarioService {
       data.password_usu = await bcrypt.hash(data.password_usu, 10);
     }
 
-    return usuarioRepo.update(doc, data);
+    const updated = await usuarioRepo.update(doc, data);
+
+    delete updated.password_usu;
+
+    return updated;
   }
 
   async patch(doc, data, requestUser) {
@@ -165,7 +154,11 @@ class UsuarioService {
       data.password_usu = await bcrypt.hash(data.password_usu, 10);
     }
 
-    return usuarioRepo.update(doc, data);
+    const updated = await usuarioRepo.update(doc, data);
+
+    delete updated.password_usu;
+
+    return updated;
   }
 
   async delete(doc, requestUser) {

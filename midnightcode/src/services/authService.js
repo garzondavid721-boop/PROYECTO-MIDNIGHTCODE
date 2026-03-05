@@ -28,7 +28,7 @@ class AuthService {
     const token = jwt.sign(
       {
         id: user.doc_identidad,
-        rol: user.rol.nombre_rol
+        rol: user.cod_rol
       },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
@@ -37,7 +37,7 @@ class AuthService {
     return {
       success: true,
       token,
-      rol: user.rol.nombre_rol
+      rol: user.cod_rol
     };
   }
 

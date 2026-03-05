@@ -1,16 +1,16 @@
 module.exports = (req, res, next) => {
 
-  const idParametro = Number(req.params.id);
-  const idToken = Number(req.user.id);
-  const rol = Number(req.user.rol);
+  const userId = Number(req.user.id);
+  const userRol = Number(req.user.rol);
+  const paramId = Number(req.params.id);
 
-  // ADMIN puede ver todo
-  if (rol === 1) {
+  // SI ES ADMIN
+  if (userRol === 1) {
     return next();
   }
 
-  // usuario solo puede ver su propio registro
-  if (idToken === idParametro) {
+  // SI ES EL MISMO USUARIO
+  if (userId === paramId) {
     return next();
   }
 

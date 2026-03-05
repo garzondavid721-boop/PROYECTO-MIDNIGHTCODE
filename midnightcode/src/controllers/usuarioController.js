@@ -44,7 +44,7 @@ exports.getById = async (req, res, next) => {
   try {
 
     const user = await usuarioService.getById(
-      Number(req.params.id),
+      req.params.id,
       req.user
     );
 
@@ -59,7 +59,7 @@ exports.update = async (req, res, next) => {
   try {
 
     const user = await usuarioService.update(
-      Number(req.params.id),
+      req.params.id,
       req.body,
       req.user
     );
@@ -75,7 +75,7 @@ exports.patch = async (req, res, next) => {
   try {
 
     const user = await usuarioService.patch(
-      Number(req.params.id),
+      req.params.id,
       req.body,
       req.user
     );
@@ -91,7 +91,7 @@ exports.delete = async (req, res, next) => {
   try {
 
     await usuarioService.delete(
-      Number(req.params.id),
+      req.params.id,
       req.user
     );
 
