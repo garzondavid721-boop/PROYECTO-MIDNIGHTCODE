@@ -5,9 +5,20 @@ class AuthController {
 
   async login(req, res, next) {
     try {
-      const { correo, password } = req.body;
-      const result = await authService.login(correo, password);
+      const { correo_usu, password_usu } = req.body;
+
+      // Validación
+      if (!correo_usu || !password_usu) {
+        return res.status(400).json({
+          success: false,
+          message: "Correo y contraseña son requeridos"
+        });
+      }
+
+      const result = await authService.login(correo_usu, password_usu);
+
       res.json(result);
+
     } catch (error) {
       next(error);
     }
@@ -17,8 +28,12 @@ class AuthController {
     try {
       const authHeader = req.headers.authorization;
 
-      if (!authHeader)
-        return res.status(400).json({ message: "Token requerido" });
+      if (!authHeader) {
+        return res.status(400).json({
+          success: false,
+          message: "Token requerido"
+        });
+      }
 
       const token = authHeader.split(" ")[1];
 
@@ -26,7 +41,10 @@ class AuthController {
         data: { token }
       });
 
-      res.json({ message: "Sesión cerrada correctamente" });
+      res.json({
+        success: true,
+        message: "Sesión cerrada correctamente"
+      });
 
     } catch (error) {
       next(error);

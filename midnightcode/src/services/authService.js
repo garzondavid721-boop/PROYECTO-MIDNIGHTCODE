@@ -11,12 +11,16 @@ class AuthService {
       include: { rol: true }
     });
 
-    if (!user) throw new Error('Credenciales inválidas');
+    if (!user) {
+      throw new Error('Credenciales inválidas');
+    }
 
     const match = await bcrypt.compare(password, user.password_usu);
-    if (!match) throw new Error('Credenciales inválidas');
 
-    
+    if (!match) {
+      throw new Error('Credenciales inválidas');
+    }
+
     if (!user.rol) {
       throw new Error('El usuario no tiene rol asignado');
     }
@@ -30,11 +34,13 @@ class AuthService {
       { expiresIn: '15m' }
     );
 
-    return { 
+    return {
+      success: true,
       token,
       rol: user.rol.nombre_rol
     };
   }
+
 }
 
 module.exports = new AuthService();
