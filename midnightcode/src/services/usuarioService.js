@@ -24,6 +24,7 @@ class UsuarioService {
     if (!correo_usu) throw new Error("El campo correo_usu es obligatorio");
     if (!password_usu) throw new Error("El campo password_usu es obligatorio");
 
+    // rol cliente por defecto
     data.cod_rol = 2;
 
     const existeDoc = await usuarioRepo.findById(doc_identidad);
@@ -45,6 +46,7 @@ class UsuarioService {
 
     return usuarioRepo.create(data);
   }
+
 
   async login(data) {
 
@@ -76,10 +78,12 @@ class UsuarioService {
     return { token };
   }
 
+
   async getAll(requestUser) {
 
-    if (requestUser.rol !== 1)
+    if (Number(requestUser.rol) !== 1) {
       throw new Error("No autorizado");
+    }
 
     const users = await usuarioRepo.findAll();
 
@@ -89,6 +93,7 @@ class UsuarioService {
     });
   }
 
+
   async getById(doc, requestUser) {
 
     const docId = Number(doc);
@@ -97,21 +102,21 @@ class UsuarioService {
 
     const user = await usuarioRepo.findById(docId);
 
-    // ⚠️ PRIMERO validar existencia
     if (!user) {
       throw new Error("Usuario no existe");
     }
 
-    // ⚠️ DESPUÉS permisos
+    // admin puede ver cualquiera
+    // usuario solo puede verse a sí mismo
     if (rol !== 1 && userId !== docId) {
       throw new Error("No autorizado");
     }
 
-    // ⚠️ OCULTAR PASSWORD
     delete user.password_usu;
 
     return user;
   }
+
 
   async update(doc, data, requestUser) {
 
@@ -123,8 +128,23 @@ class UsuarioService {
       throw new Error("Usuario no existe");
     }
 
-    if (requestUser.rol !== 1 && requestUser.id !== doc)
+    const userId = Number(requestUser.id);
+    const rol = Number(requestUser.rol);
+
+    // ❌ no permitir cambiar rol
+    if (data.cod_rol) {
+      throw new Error("No se permite modificar el rol");
+    }
+
+    // ❌ usuario no puede modificar otro
+    if (rol !== 1 && userId !== doc) {
       throw new Error("No autorizado");
+    }
+
+    // ❌ admin no puede modificar otro admin
+    if (rol === 1 && user.cod_rol === 1 && userId !== doc) {
+      throw new Error("No puedes modificar otro administrador");
+    }
 
     if (data.password_usu) {
       data.password_usu = await bcrypt.hash(data.password_usu, 10);
@@ -136,6 +156,7 @@ class UsuarioService {
 
     return updated;
   }
+
 
   async patch(doc, data, requestUser) {
 
@@ -147,8 +168,20 @@ class UsuarioService {
       throw new Error("Usuario no existe");
     }
 
-    if (requestUser.rol !== 1 && requestUser.id !== doc)
+    const userId = Number(requestUser.id);
+    const rol = Number(requestUser.rol);
+
+    if (data.cod_rol) {
+      throw new Error("No se permite modificar el rol");
+    }
+
+    if (rol !== 1 && userId !== doc) {
       throw new Error("No autorizado");
+    }
+
+    if (rol === 1 && user.cod_rol === 1 && userId !== doc) {
+      throw new Error("No puedes modificar otro administrador");
+    }
 
     if (data.password_usu) {
       data.password_usu = await bcrypt.hash(data.password_usu, 10);
@@ -161,6 +194,7 @@ class UsuarioService {
     return updated;
   }
 
+
   async delete(doc, requestUser) {
 
     doc = Number(doc);
@@ -171,8 +205,18 @@ class UsuarioService {
       throw new Error("Usuario no existe");
     }
 
-    if (requestUser.rol !== 1)
-      throw new Error("Solo admin puede eliminar");
+    const userId = Number(requestUser.id);
+    const rol = Number(requestUser.rol);
+
+    // usuario solo puede eliminarse a sí mismo
+    if (rol !== 1 && userId !== doc) {
+      throw new Error("No autorizado");
+    }
+
+    // admin no puede eliminar otro admin
+    if (rol === 1 && user.cod_rol === 1 && userId !== doc) {
+      throw new Error("No puedes eliminar otro administrador");
+    }
 
     return usuarioRepo.delete(doc);
   }
