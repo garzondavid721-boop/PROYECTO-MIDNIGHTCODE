@@ -6,6 +6,7 @@ const cors = require('cors');
 const logger = require('./config/logger');
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
+const rolRoutes = require('./routes/rolRoutes');
 const authRoutes = require('./routes/authRoutes');
 const horarioRoutes = require('./routes/horarioRoutes');
 const parqueaderoRoutes = require('./routes/parqueaderoRoutes');
@@ -16,9 +17,10 @@ const usuarioRoutes = require('./routes/usuarioRoutes');
 const app = express();
 
 app.use(cors());
-app.use(express.json()); // 👈 TIENE QUE IR ANTES DE LAS RUTAS
+app.use(express.json()); 
 
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/roles', rolRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/horarios', horarioRoutes);
 app.use('/api/mesas', mesaRoutes);
