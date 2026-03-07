@@ -24,7 +24,7 @@ class UsuarioService {
     if (!correo_usu) throw new Error("El campo correo_usu es obligatorio");
     if (!password_usu) throw new Error("El campo password_usu es obligatorio");
 
-    data.cod_rol = 2;
+    data.cod_rol = 3; // rol por defecto: cliente
 
     const existeDoc = await usuarioRepo.findById(doc_identidad);
     if (existeDoc) {
