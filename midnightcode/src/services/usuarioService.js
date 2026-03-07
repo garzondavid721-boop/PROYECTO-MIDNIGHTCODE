@@ -24,12 +24,11 @@ class UsuarioService {
     if (!correo_usu) throw new Error("El campo correo_usu es obligatorio");
     if (!password_usu) throw new Error("El campo password_usu es obligatorio");
 
-    // rol cliente por defecto
     data.cod_rol = 2;
 
     const existeDoc = await usuarioRepo.findById(doc_identidad);
     if (existeDoc) {
-      throw new Error("Ya existe un usuario con ese documento, use otro");
+      throw new Error("Ya existe un usuario con ese documento");
     }
 
     const existeTelefono = await usuarioRepo.findByTelefono(telefono_usu);
@@ -47,16 +46,10 @@ class UsuarioService {
     return usuarioRepo.create(data);
   }
 
-
   async login(data) {
 
-    if (!data.correo_usu) {
-      throw new Error("El correo es requerido");
-    }
-
-    if (!data.password_usu) {
-      throw new Error("La contraseña es requerida");
-    }
+    if (!data.correo_usu) throw new Error("El correo es requerido");
+    if (!data.password_usu) throw new Error("La contraseña es requerida");
 
     const user = await usuarioRepo.findByEmail(data.correo_usu);
 
@@ -78,7 +71,6 @@ class UsuarioService {
     return { token };
   }
 
-
   async getAll(requestUser) {
 
     if (Number(requestUser.rol) !== 1) {
@@ -87,12 +79,13 @@ class UsuarioService {
 
     const users = await usuarioRepo.findAll();
 
-    return users.map(user => {
+    const filtrados = users.filter(user => user.cod_rol !== 1);
+
+    return filtrados.map(user => {
       delete user.password_usu;
       return user;
     });
   }
-
 
   async getById(doc, requestUser) {
 
@@ -102,14 +95,14 @@ class UsuarioService {
 
     const user = await usuarioRepo.findById(docId);
 
-    if (!user) {
-      throw new Error("Usuario no existe");
-    }
+    if (!user) throw new Error("Usuario no existe");
 
-    // admin puede ver cualquiera
-    // usuario solo puede verse a sí mismo
     if (rol !== 1 && userId !== docId) {
       throw new Error("No autorizado");
+    }
+
+    if (rol === 1 && user.cod_rol === 1 && userId !== docId) {
+      throw new Error("No puedes ver otro administrador");
     }
 
     delete user.password_usu;
@@ -117,33 +110,29 @@ class UsuarioService {
     return user;
   }
 
-
   async update(doc, data, requestUser) {
 
     doc = Number(doc);
 
     const user = await usuarioRepo.findById(doc);
 
-    if (!user) {
-      throw new Error("Usuario no existe");
-    }
+    if (!user) throw new Error("Usuario no existe");
 
     const userId = Number(requestUser.id);
     const rol = Number(requestUser.rol);
 
-    // ❌ no permitir cambiar rol
-    if (data.cod_rol) {
-      throw new Error("No se permite modificar el rol");
-    }
-
-    // ❌ usuario no puede modificar otro
     if (rol !== 1 && userId !== doc) {
       throw new Error("No autorizado");
     }
 
-    // ❌ admin no puede modificar otro admin
+    // admin no puede modificar otro admin
     if (rol === 1 && user.cod_rol === 1 && userId !== doc) {
       throw new Error("No puedes modificar otro administrador");
+    }
+
+    // solo admin puede modificar roles
+    if (rol !== 1 && data.cod_rol) {
+      throw new Error("No autorizado para modificar rol");
     }
 
     if (data.password_usu) {
@@ -156,7 +145,6 @@ class UsuarioService {
 
     return updated;
   }
-
 
   async patch(doc, data, requestUser) {
 
@@ -164,16 +152,10 @@ class UsuarioService {
 
     const user = await usuarioRepo.findById(doc);
 
-    if (!user) {
-      throw new Error("Usuario no existe");
-    }
+    if (!user) throw new Error("Usuario no existe");
 
     const userId = Number(requestUser.id);
     const rol = Number(requestUser.rol);
-
-    if (data.cod_rol) {
-      throw new Error("No se permite modificar el rol");
-    }
 
     if (rol !== 1 && userId !== doc) {
       throw new Error("No autorizado");
@@ -181,6 +163,10 @@ class UsuarioService {
 
     if (rol === 1 && user.cod_rol === 1 && userId !== doc) {
       throw new Error("No puedes modificar otro administrador");
+    }
+
+    if (rol !== 1 && data.cod_rol) {
+      throw new Error("No autorizado para modificar rol");
     }
 
     if (data.password_usu) {
@@ -194,26 +180,21 @@ class UsuarioService {
     return updated;
   }
 
-
   async delete(doc, requestUser) {
 
     doc = Number(doc);
 
     const user = await usuarioRepo.findById(doc);
 
-    if (!user) {
-      throw new Error("Usuario no existe");
-    }
+    if (!user) throw new Error("Usuario no existe");
 
     const userId = Number(requestUser.id);
     const rol = Number(requestUser.rol);
 
-    // usuario solo puede eliminarse a sí mismo
     if (rol !== 1 && userId !== doc) {
       throw new Error("No autorizado");
     }
 
-    // admin no puede eliminar otro admin
     if (rol === 1 && user.cod_rol === 1 && userId !== doc) {
       throw new Error("No puedes eliminar otro administrador");
     }
