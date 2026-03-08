@@ -1,29 +1,18 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const horarioController = require('../controllers/horarioController');
-const auth = require('../middlewares/authMiddleware');
-const authorize = require('../middlewares/roleMiddleware');
+const controller = require("../controllers/horarioController");
 
-router.get(
-  '/',
-  auth,
-  authorize(['ADMIN']),
-  horarioController.getAll.bind(horarioController)
-);
+const authMiddleware = require("../middlewares/authMiddleware");
 
-router.get(
-  '/:id',
-  auth,
-  authorize(['ADMIN','EMPLEADO']),
-  horarioController.getById.bind(horarioController)
-);
+router.get("/", authMiddleware, controller.getAll);
 
-router.post(
-  '/',
-  auth,
-  authorize(['ADMIN']),
-  horarioController.create.bind(horarioController)
-);
+router.get("/usuario/:doc", authMiddleware, controller.getByDocumento);
+
+router.post("/", authMiddleware, controller.create);
+
+router.put("/:id", authMiddleware, controller.update);
+
+router.delete("/:id", authMiddleware, controller.delete);
 
 module.exports = router;
