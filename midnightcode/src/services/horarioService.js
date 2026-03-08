@@ -60,13 +60,11 @@ class HorarioService {
         error.statusCode = 400;
         throw error;
       }
-    }
-
-    if (rol === 2) {
+    } else if (rol === 2) {
       // EMPLEADO solo puede ver su propio horario
       documento = this.obtenerDocumento(user);
 
-      // si intenta pasar otro doc que no es suyo, negar
+      // Si intenta pasar otro documento, negar
       if (Number(doc) !== documento) {
         const error = new Error("No autorizado para ver otro usuario");
         error.statusCode = 403;
@@ -115,14 +113,14 @@ class HorarioService {
       throw error;
     }
 
-    if (hora_entrada === hora_salida) {
-      const error = new Error("La hora de entrada y salida no pueden ser iguales");
-      error.statusCode = 400;
-      throw error;
-    }
 
     const entradaNueva = this.convertirHora(hora_entrada);
     const salidaNueva = this.convertirHora(hora_salida);
+    if (entradaNueva >= salidaNueva) {
+      const error = new Error("La hora de salida no puede ser antes o igual a la hora de entrada");
+      error.statusCode = 400;
+      throw error;
+    }
 
     const horarios = await horarioRepository.findByDocumento(doc_identidad) || [];
 
@@ -132,9 +130,7 @@ class HorarioService {
       const entradaExistente = this.convertirHora(h.hora_entrada);
       const salidaExistente = this.convertirHora(h.hora_salida);
 
-      const seCruzan =
-        entradaNueva < salidaExistente &&
-        salidaNueva > entradaExistente;
+      const seCruzan = entradaNueva < salidaExistente && salidaNueva > entradaExistente;
 
       if (seCruzan) {
         const error = new Error("El empleado ya tiene un turno en ese horario");
