@@ -1,17 +1,42 @@
-const mesaRepo = require('../repositories/parqueaderoRepository');
+const prisma = require("../config/database");
 
-class ParqueaderoService {
+class ParqueaderoRepository{
 
-  getAll() {
-    return parqueaderoRepo.findAll();
+  async findAll(){
+    return prisma.parqueadero.findMany();
   }
 
-  async update(id, data, user) {
-    if (user.rol !== 'ADMIN')
-      throw new Error('Solo admin puede modificar mesas');
-
-    return parqueaderoRepo.update(id, data);
+  async findById(id){
+    return prisma.parqueadero.findUnique({
+      where:{
+        cod_parqueadero:Number(id)
+      }
+    });
   }
+
+  async create(data){
+    return prisma.parqueadero.create({
+      data
+    });
+  }
+
+  async update(id,data){
+    return prisma.parqueadero.update({
+      where:{
+        cod_parqueadero:Number(id)
+      },
+      data
+    });
+  }
+
+  async delete(id){
+    return prisma.parqueadero.delete({
+      where:{
+        cod_parqueadero:Number(id)
+      }
+    });
+  }
+
 }
 
-module.exports = new ParqueaderoService();
+module.exports = new ParqueaderoRepository();

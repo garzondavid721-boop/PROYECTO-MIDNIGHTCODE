@@ -1,17 +1,42 @@
-const mesaRepo = require('../repositories/mesaRepository');
+const prisma = require("../config/database");
 
-class MesaService {
+class MesaRepository {
 
-  getAll() {
-    return mesaRepo.findAll();
+  async findAll(){
+    return prisma.mesa.findMany();
   }
 
-  async update(id, data, user) {
-    if (user.rol !== 'ADMIN')
-      throw new Error('Solo admin puede modificar mesas');
-
-    return mesaRepo.update(id, data);
+  async findById(id){
+    return prisma.mesa.findUnique({
+      where:{
+        cod_mesa:Number(id)
+      }
+    });
   }
+
+  async create(data){
+    return prisma.mesa.create({
+      data
+    });
+  }
+
+  async update(id,data){
+    return prisma.mesa.update({
+      where:{
+        cod_mesa:Number(id)
+      },
+      data
+    });
+  }
+
+  async delete(id){
+    return prisma.mesa.delete({
+      where:{
+        cod_mesa:Number(id)
+      }
+    });
+  }
+
 }
 
-module.exports = new MesaService();
+module.exports = new MesaRepository();

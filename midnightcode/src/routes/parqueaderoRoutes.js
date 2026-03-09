@@ -1,7 +1,17 @@
-const router = require('express').Router();
-const controller = require('../controllers/parqueaderoController');
-const auth = require('../middlewares/authMiddleware');
+const express = require("express");
 
-router.get('/', auth, controller.getAll);
+const router = express.Router();
+
+const controller = require("../controllers/parqueaderoController");
+
+const authMiddleware = require("../middlewares/authMiddleware");
+
+router.get("/",authMiddleware,controller.getAll);
+
+router.post("/",authMiddleware,controller.create);
+
+router.put("/:id",authMiddleware,controller.update);
+
+router.delete("/:id",authMiddleware,controller.delete);
 
 module.exports = router;

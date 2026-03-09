@@ -2,6 +2,8 @@ require("dotenv").config();
 
 require("./jobs/liberarReservasJob");
 require("./jobs/limpiarCanciones");
+const cron = require("node-cron");
+const liberarReservas = require("./jobs/reservaExpirationJob");
 
 const express = require("express");
 const cors = require("cors");
@@ -21,6 +23,7 @@ const usuarioRoutes = require("./routes/usuarioRoutes");
 const cancionRoutes = require("./routes/cancionRoutes");
 
 const app = express();
+
 
 app.use(cors());
 app.use(express.json());
@@ -58,6 +61,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     logger.info("Cliente desconectado");
   });
+});
+
+// cada 1 minuto revisa reservas expiradas
+cron.schedule("* * * * *", async () => {
+  await liberarReservas();
 });
 
 const PORT = process.env.PORT || 3000;

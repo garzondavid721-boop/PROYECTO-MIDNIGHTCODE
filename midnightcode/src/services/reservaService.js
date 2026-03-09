@@ -1,182 +1,229 @@
-const reservaRepo = require('../repositories/reservaRepository');
-const prisma = require('../config/database');
+const reservaRepository = require("../repositories/reservaRepository");
+const prisma = require("../config/database");
 
 class ReservaService {
 
-  async create(data, user) {
+  obtenerRol(user){
+    return Number(user.cod_rol || user.rol);
+  }
 
-    //  Validar login
-    if (!user) {
-      const error = new Error('Debe estar logueado');
+  obtenerDocumento(user){
+    return Number(user.doc_identidad || user.id);
+  }
+
+  validarUsuario(user){
+
+    if(!user){
+      const error = new Error("No autenticado");
       error.statusCode = 401;
       throw error;
     }
 
-    //  Validar body
-    if (!data || Object.keys(data).length === 0) {
-      const error = new Error('Debe enviar datos en el body');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    //  Validar cod_mesa
-    if (!data.cod_mesa) {
-      const error = new Error('cod_mesa es obligatorio');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const codMesa = Number(data.cod_mesa);
-
-    if (isNaN(codMesa)) {
-      const error = new Error('cod_mesa debe ser un número válido');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    //  Validar fecha_reserva
-    if (!data.fecha_reserva) {
-      const error = new Error('fecha_reserva es obligatoria');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    //  Validar hora_reserva
-    if (!data.hora_reserva) {
-      const error = new Error('hora_reserva es obligatoria');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    //  Validar cantidad_personas
-    if (!data.cantidad_personas) {
-      const error = new Error('cantidad_personas es obligatoria');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const cantidadPersonas = Number(data.cantidad_personas);
-
-    if (isNaN(cantidadPersonas)) {
-      const error = new Error('cantidad_personas debe ser un número válido');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    //  Validar parqueadero si viene
-    let codParqueadero = null;
-
-    if (data.cod_parqueadero) {
-      codParqueadero = Number(data.cod_parqueadero);
-
-      if (isNaN(codParqueadero)) {
-        const error = new Error('cod_parqueadero debe ser un número válido');
-        error.statusCode = 400;
-        throw error;
-      }
-    }
-
-    //  Verificar reserva activa
-    const existing = await reservaRepo.findActiveByUser(user.id);
-
-    if (existing) {
-      const error = new Error('Ya tienes una reserva activa');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    //  Buscar mesa
-    const mesa = await prisma.mesa.findUnique({
-      where: { cod_mesa: codMesa }
-    });
-
-    if (!mesa) {
-      const error = new Error('La mesa no existe');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    if (mesa.estado_mesa === false) {
-      const error = new Error('Mesa no disponible');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    //  Ocupar mesa
-    await prisma.mesa.update({
-      where: { cod_mesa: codMesa },
-      data: { estado_mesa: false }
-    });
-
-    //  Ocupar parqueadero si viene
-    if (codParqueadero) {
-
-      const parqueadero = await prisma.parqueadero.findUnique({
-        where: { cod_parqueadero: codParqueadero }
-      });
-
-      if (!parqueadero) {
-        const error = new Error('El parqueadero no existe');
-        error.statusCode = 404;
-        throw error;
-      }
-
-      if (parqueadero.estado_par === false) {
-        const error = new Error('Parqueadero no disponible');
-        error.statusCode = 400;
-        throw error;
-      }
-
-      await prisma.parqueadero.update({
-        where: { cod_parqueadero: codParqueadero },
-        data: { estado_par: false }
-      });
-    }
-
-    //  Fecha expiración 15 min
-    const expiracion = new Date(Date.now() + 15 * 60 * 1000);
-
-    return reservaRepo.create({
-      cod_mesa: codMesa,
-      cod_parqueadero: codParqueadero,
-      doc_identidad: user.id,
-      fecha_reserva: new Date(data.fecha_reserva),
-      hora_reserva: new Date(data.hora_reserva),
-      cantidad_personas: cantidadPersonas,
-      incluye_cover: data.incluye_cover ?? true,
-      fecha_expiracion: expiracion,
-      estado: 'Pendiente'
-    });
+    return this.obtenerRol(user);
   }
 
-  async getAll(user) {
+  validarCampos(data){
 
-    if (!user) {
-      const error = new Error('Debe estar logueado');
-      error.statusCode = 401;
+    const camposFaltantes=[];
+
+    if(!data.cod_mesa) camposFaltantes.push("cod_mesa");
+    if(!data.cod_parqueadero) camposFaltantes.push("cod_parqueadero");
+    if(!data.fecha_reserva) camposFaltantes.push("fecha_reserva");
+    if(!data.hora_reserva) camposFaltantes.push("hora_reserva");
+    if(!data.cantidad_personas) camposFaltantes.push("cantidad_personas");
+    if(data.incluye_cover===undefined) camposFaltantes.push("incluye_cover");
+
+    if(camposFaltantes.length>0){
+
+      const error=new Error("Faltan campos obligatorios");
+      error.statusCode=400;
+      error.fields=camposFaltantes;
       throw error;
+
     }
 
-    if (user.rol === 'ADMIN' || user.rol === 'EMPLEADO') {
-      return reservaRepo.findAll();
-    }
-
-    return reservaRepo.findByUser(user.id);
   }
 
-  async getById(id) {
+  async getAll(user){
 
-    if (!id || isNaN(Number(id))) {
-      const error = new Error('id_reserva inválido');
-      error.statusCode = 400;
-      throw error;
+    const rol=this.validarUsuario(user);
+
+    if(rol!==1){
+      throw new Error("Solo admin puede ver todas las reservas");
     }
 
-    return prisma.reserva.findUnique({
-      where: { id_reserva: Number(id) }
+    return reservaRepository.findAll();
+
+  }
+
+  async getByUsuario(user){
+
+    const rol=this.validarUsuario(user);
+
+    if(rol!==3){
+      throw new Error("Solo clientes pueden ver sus reservas");
+    }
+
+    const doc=this.obtenerDocumento(user);
+
+    return reservaRepository.findByUsuario(doc);
+
+  }
+
+  async create(data,user){
+
+    const rol=this.validarUsuario(user);
+
+    if(rol!==3){
+      throw new Error("Solo clientes pueden crear reservas");
+    }
+
+    this.validarCampos(data);
+
+    const doc=this.obtenerDocumento(user);
+
+    const expiracion=new Date();
+    expiracion.setMinutes(expiracion.getMinutes()+15);
+
+    const reserva=await prisma.$transaction(async(tx)=>{
+
+      const mesaOcupada=await tx.reserva.findFirst({
+
+        where:{
+          cod_mesa:Number(data.cod_mesa),
+          fecha_reserva:new Date(data.fecha_reserva),
+          hora_reserva:new Date(`1970-01-01T${data.hora_reserva}`),
+          estado_temporal:"Activa"
+        }
+
+      });
+
+      if(mesaOcupada){
+        throw new Error("Mesa ocupada");
+      }
+
+      return tx.reserva.create({
+
+        data:{
+          doc_identidad:doc,
+          cod_mesa:data.cod_mesa,
+          cod_parqueadero:data.cod_parqueadero,
+          fecha_reserva:new Date(data.fecha_reserva),
+          hora_reserva:new Date(`1970-01-01T${data.hora_reserva}`),
+          cantidad_personas:data.cantidad_personas,
+          incluye_cover:data.incluye_cover,
+          estado:"Pendiente",
+          estado_temporal:"Activa",
+          fecha_expiracion:expiracion
+        }
+
+      });
+
     });
+
+    //  SOCKET EVENTO
+    if(global.io){
+      global.io.emit("reserva_creada",reserva);
+    }
+
+    return reserva;
+
+  }
+
+  async bloquearMesa(data,user){
+
+    const expiracion=new Date();
+    expiracion.setMinutes(expiracion.getMinutes()+15);
+
+    const bloqueo=await prisma.reserva.create({
+
+      data:{
+        doc_identidad:this.obtenerDocumento(user),
+        cod_mesa:data.cod_mesa,
+        cod_parqueadero:data.cod_parqueadero,
+        fecha_reserva:new Date(data.fecha_reserva),
+        hora_reserva:new Date(`1970-01-01T${data.hora_reserva}`),
+        cantidad_personas:0,
+        incluye_cover:false,
+        estado:"Bloqueada",
+        estado_temporal:"Activa",
+        fecha_expiracion:expiracion
+      }
+
+    });
+
+    if(global.io){
+      global.io.emit("mesa_bloqueada",bloqueo);
+    }
+
+    return bloqueo;
+
+  }
+
+  async update(id,data,user){
+
+    const rol=this.validarUsuario(user);
+
+    if(rol!==1){
+      throw new Error("Solo admin");
+    }
+
+    return reservaRepository.update(id,data);
+
+  }
+
+  async delete(id,user){
+
+    const rol=this.validarUsuario(user);
+
+    if(rol!==1){
+      throw new Error("Solo admin");
+    }
+
+    return reservaRepository.delete(id);
+
+  }
+
+  async getMesasDisponibles(fecha,hora){
+
+    const mesas=await prisma.mesa.findMany();
+
+    const reservas=await prisma.reserva.findMany({
+
+      where:{
+        fecha_reserva:new Date(fecha),
+        hora_reserva:new Date(`1970-01-01T${hora}`),
+        estado_temporal:"Activa"
+      }
+
+    });
+
+    const ocupadas=reservas.map(r=>r.cod_mesa);
+
+    return mesas.filter(m=>!ocupadas.includes(m.cod_mesa));
+
+  }
+
+  async getParqueaderosDisponibles(fecha,hora){
+
+    const parqueaderos=await prisma.parqueadero.findMany();
+
+    const reservas=await prisma.reserva.findMany({
+
+      where:{
+        fecha_reserva:new Date(fecha),
+        hora_reserva:new Date(`1970-01-01T${hora}`),
+        estado_temporal:"Activa"
+      }
+
+    });
+
+    const ocupados=reservas.map(r=>r.cod_parqueadero);
+
+    return parqueaderos.filter(p=>!ocupados.includes(p.cod_parqueadero));
+
   }
 
 }
 
-module.exports = new ReservaService();
+module.exports=new ReservaService();
