@@ -7,6 +7,7 @@ const liberarReservas = require("./jobs/reservaExpirationJob");
 
 const express = require("express");
 const cors = require("cors");
+import cors from "cors";
 const logger = require("./config/logger");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 
@@ -46,6 +47,29 @@ app.use((req, res, next) => {
 app.use(errorMiddleware);
 
 const server = http.createServer(app);
+
+// CORS personalizado Y DEFINO por cual dominio se va a conectar
+//  para permitir solo el frontend específico
+const allowedOrigins = [
+  "http://localhost:5173",
+  "CUANDO SE PUBLIQUE: URL_DEL_FRONTEND"
+];
+
+app.use(
+  cors({
+    origin: function(origin, callback) {
+      // permitir requests sin origin (como Postman o backend a backend)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true); // dominio permitido
+      } else {
+        callback(new Error("No permitido por CORS"));
+      }
+    },
+    credentials: true
+  })
+);
 
 const io = new Server(server, {
   cors: {
