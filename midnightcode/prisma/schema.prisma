@@ -116,17 +116,23 @@ model Producto {
 }
 
 model Venta {
+
   id_venta       Int      @id @default(autoincrement()) @db.Int
   reserva_id     Int?     @db.Int
   doc_identidad  Int      @db.Int
   cod_metodopago Int?     @db.Int
+  codigo_pago    Int?     @unique
+  id_caja        Int?
+
   fecha          DateTime @default(now()) @db.DateTime(0)
   total          Decimal  @db.Decimal(10,2)
+
   estado         EstadoVenta @default(Pendiente)
 
   usuario    Usuario     @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
   metodoPago MetodoPago? @relation(fields: [cod_metodopago], references: [cod_metodopago], onDelete: Cascade)
   reserva    Reserva?    @relation(fields: [reserva_id], references: [id_reserva], onDelete: Cascade)
+  caja       Caja?       @relation(fields: [id_caja], references: [id_caja])
 
   detalles DetalleVenta[]
 
@@ -181,7 +187,33 @@ model Auditoria {
   usuario_afectado Int?     @db.Int
   fecha            DateTime @default(now()) @db.DateTime(0)
   descripcion      String?  @db.Text
+
+  @@index([usuario_afectado])
 }
+
+model Caja {
+
+  id_caja        Int      @id @default(autoincrement())
+  doc_identidad  Int
+
+  monto_inicial  Decimal  @db.Decimal(10,2)
+  monto_final    Decimal? @db.Decimal(10,2)
+
+  estado         EstadoCaja @default(Abierta)
+
+  fecha_apertura DateTime @default(now())
+  fecha_cierre   DateTime?
+
+  usuario Usuario @relation(fields:[doc_identidad], references:[doc_identidad])
+
+  ventas Venta[]
+}
+
+enum EstadoCaja {
+  Abierta
+  Cerrada
+}
+
 enum DiaSemana {
   Lunes
   Martes

@@ -10,6 +10,7 @@ const cors = require("cors");
 // import cors from "cors";
 const logger = require("./config/logger");
 const errorMiddleware = require("./middlewares/errorMiddleware");
+const auditMiddleware = require("./middlewares/auditMiddleware");
 
 const http = require("http");
 const { Server } = require("socket.io");
@@ -23,12 +24,20 @@ const reservaRoutes = require("./routes/reservaRoutes");
 const usuarioRoutes = require("./routes/usuarioRoutes");
 const cancionRoutes = require("./routes/cancionRoutes");
 const productoRoutes = require("./routes/productoRoutes");
+const ventaRoutes = require("./routes/ventaRoutes");
+const cajaRoutes = require("./routes/cajaRoutes");
+
+
+
 
 const app = express();
 
 
 app.use(cors());
 app.use(express.json());
+
+app.use(auditMiddleware);
+
 
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/roles", rolRoutes);
@@ -39,6 +48,8 @@ app.use("/api/parqueaderos", parqueaderoRoutes);
 app.use("/api/reservas", reservaRoutes);
 app.use("/api/canciones", cancionRoutes);
 app.use("/api/productos", productoRoutes);
+app.use("/api/ventas",ventaRoutes);
+app.use("/api/caja",cajaRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({
