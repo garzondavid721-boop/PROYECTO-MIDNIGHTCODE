@@ -94,6 +94,29 @@ app.use(errorHandler);
 
 const server = http.createServer(app);
 
+/* ---------------- CORS DE CONNECCION CON EL FRONTED---------------- */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "CUANDO SE PUBLIQUE: URL_DEL_FRONTEND"
+];
+
+app.use(
+  cors({
+    origin: function(origin, callback) {
+      // permitir requests sin origin (como Postman o backend a backend)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true); // dominio permitido
+      } else {
+        callback(new Error("No permitido por CORS"));
+      }
+    },
+    credentials: true
+  })
+);
+
+
 /* ---------------- SOCKET.IO ---------------- */
 
 const io = new Server(server, {
