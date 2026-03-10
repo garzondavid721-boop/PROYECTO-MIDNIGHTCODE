@@ -152,10 +152,21 @@ cron.schedule("* * * * *", async () => {
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
-
   logger.info({
     event: "SERVER_START",
     port: PORT
   });
+}).on("error", (err) => {
+
+  if (err.code === "EADDRINUSE") {
+
+    logger.error({
+      event: "PUERTO_OCUPADO",
+      port: PORT
+    });
+
+    process.exit(1);
+
+  }
 
 });

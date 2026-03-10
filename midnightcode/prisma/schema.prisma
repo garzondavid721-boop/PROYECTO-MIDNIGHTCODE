@@ -28,6 +28,7 @@ model Usuario {
   reservas  Reserva[]
   ventas    Venta[]
   canciones Cancion[]
+  cajas     Caja[]
 
   @@index([cod_rol])
 }
