@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+
   app:
     build:
       context: .
@@ -8,8 +9,6 @@ services:
     container_name: node_app
     restart: unless-stopped
     working_dir: /usr/src/app
-    volumes:
-      - .:/usr/src/app
     environment:
       DATABASE_URL: mysql://root:root@db:3306/midnightcode
       DB_ROOT_PASSWORD: root
@@ -17,7 +16,8 @@ services:
       PORT: 3000
       JWT_SECRET: 9fK$2vLmQ8#xT7zP@rW5!uY3cN6*eA1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "3000:3000"
     networks:
@@ -36,6 +36,11 @@ services:
       - "3306:3306"
     networks:
       - node_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      retries: 10
+      timeout: 5s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -62,7 +67,6 @@ services:
       SONAR_JDBC_URL: jdbc:postgresql://db1:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
-      
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
@@ -94,4 +98,3 @@ volumes:
 networks:
   node_network:
     driver: bridge
-

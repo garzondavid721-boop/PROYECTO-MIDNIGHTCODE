@@ -1,29 +1,28 @@
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copiar solo dependencias primero (mejor cache)
 COPY package*.json ./
 
-# Instalar dependencias
 RUN npm ci
 
-# Copiar código fuente
+# copiar prisma schema
+COPY prisma ./prisma
+
+# generar cliente prisma
+RUN npx prisma generate
+
+# copiar código fuente
 COPY src ./src
 
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copiar solo lo necesario del builder
-COPY --from=builder /app /app
+COPY --from=builder /usr/src/app /usr/src/app
 
-# Eliminar devDependencies
 RUN npm prune --production
-
-# Seguridad
-USER node
 
 EXPOSE 3000
 
-CMD ["node", "src/app.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"]
