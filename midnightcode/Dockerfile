@@ -23,6 +23,10 @@ COPY --from=builder /usr/src/app /usr/src/app
 
 RUN npm prune --production
 
+
+RUN addgroup -S nodejs && adduser -S nodeuser -G nodejs
+USER nodeuser
+
 EXPOSE 3000
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"]
