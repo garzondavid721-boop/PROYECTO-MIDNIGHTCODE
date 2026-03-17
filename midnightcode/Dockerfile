@@ -1,12 +1,22 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app .
+
+RUN npm prune --production
+
+USER node
+
 EXPOSE 3000
 
-CMD ["npx", "nodemon", "src/app.js"]
+CMD ["node", "src/app.js"]
