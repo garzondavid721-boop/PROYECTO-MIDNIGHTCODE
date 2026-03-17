@@ -15,7 +15,7 @@ RUN npx prisma generate
 # copiar código fuente
 COPY src ./src
 
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
