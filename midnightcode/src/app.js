@@ -13,7 +13,6 @@ const cron = require("node-cron");
 
 const logger = require("./config/logger");
 
-
 /* ---------------- HTTP LOGGER ---------------- */
 
 const httpLogger = require("./middlewares/loggerMiddleware");
