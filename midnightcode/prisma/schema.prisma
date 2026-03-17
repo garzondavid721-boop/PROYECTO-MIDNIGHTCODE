@@ -1,0 +1,258 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Rol {
+  cod_rol     Int     @id @default(autoincrement()) @db.Int
+  nombre_rol  String  @db.VarChar(50)
+  descrip_rol String? @db.VarChar(100)
+
+  usuarios Usuario[]
+}
+
+model Usuario {
+  doc_identidad Int     @id @db.Int
+  cod_rol       Int     @db.Int
+  nombre_usu    String  @db.VarChar(100)
+  telefono_usu  String? @db.VarChar(15)
+  correo_usu    String  @unique @db.VarChar(100)
+  password_usu  String  @db.VarChar(255)
+
+  rol       Rol       @relation(fields: [cod_rol], references: [cod_rol], onDelete: Cascade)
+  horarios  Horario[]
+  reservas  Reserva[]
+  ventas    Venta[]
+  canciones Cancion[]
+  cajas     Caja[]
+
+  @@index([cod_rol])
+}
+
+model Horario {
+  id_horario    Int      @id @default(autoincrement()) @db.Int
+  doc_identidad Int      @db.Int
+  dia_semana    DiaSemana
+  hora_entrada  DateTime @db.Time(0)
+  hora_salida   DateTime @db.Time(0)
+  estado        Boolean  @default(true) @db.TinyInt
+
+  usuario Usuario @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
+
+  @@index([doc_identidad])
+}
+
+model Mesa {
+  cod_mesa       Int     @id @default(autoincrement()) @db.Int
+  numero_mesa    Int     @db.Int
+  tipo_mesa      TipoMesa
+  capacidad_mesa Int     @db.Int
+  estado_mesa    Boolean @default(true) @db.TinyInt
+  precio_reserva Decimal @default(0.00) @db.Decimal(10,2)
+
+  reservas Reserva[]
+}
+
+model Parqueadero {
+  cod_parqueadero    Int     @id @default(autoincrement()) @db.Int
+  numero_par         Int     @db.Int
+  estado_par         Boolean @default(true) @db.TinyInt
+  precio_parqueadero Decimal @default(0.00) @db.Decimal(10,2)
+
+  reservas Reserva[]
+}
+model TokenBlacklist {
+  id        Int      @id @default(autoincrement())
+  token     String   @db.Text
+  createdAt DateTime @default(now())
+}
+model Reserva {
+  id_reserva        Int      @id @default(autoincrement()) @db.Int
+  doc_identidad     Int      @db.Int
+  cod_mesa          Int      @db.Int
+  cod_parqueadero   Int?     @db.Int
+  fecha_reserva     DateTime @db.Date
+  hora_reserva      DateTime @db.Time(0)
+  cantidad_personas Int      @db.Int
+  incluye_cover     Boolean  @default(true) @db.TinyInt
+  estado            EstadoReserva @default(Pendiente)
+
+  fecha_expiracion  DateTime? @db.DateTime(0)
+  estado_temporal   EstadoTemporal @default(Activa)
+
+  usuario     Usuario      @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
+  mesa        Mesa         @relation(fields: [cod_mesa], references: [cod_mesa], onDelete: Cascade)
+  parqueadero Parqueadero? @relation(fields: [cod_parqueadero], references: [cod_parqueadero], onDelete: Cascade)
+
+  ventas Venta[]
+
+  @@index([doc_identidad])
+  @@index([cod_mesa])
+  @@index([cod_parqueadero])
+}
+
+model MetodoPago {
+  cod_metodopago Int     @id @default(autoincrement()) @db.Int
+  nombre         String  @db.VarChar(50)
+  estado         Boolean @default(true) @db.TinyInt
+
+  ventas Venta[]
+}
+
+model Producto {
+  cod_producto        Int     @id @default(autoincrement()) @db.Int
+  nombre_produc       String  @db.VarChar(100)
+  presentacion_produc String  @db.VarChar(50)
+  precio_produc       Decimal @db.Decimal(10,2)
+  estado_produc       Boolean @default(true) @db.TinyInt
+  stock               Int     @db.Int
+  cantidad            Int     @db.Int
+
+  detalles   DetalleVenta[]
+  movimientos Movimiento[]
+}
+
+model Venta {
+
+  id_venta       Int      @id @default(autoincrement()) @db.Int
+  reserva_id     Int?     @db.Int
+  doc_identidad  Int      @db.Int
+  cod_metodopago Int?     @db.Int
+  codigo_pago    Int?     @unique
+  id_caja        Int?
+
+  fecha          DateTime @default(now()) @db.DateTime(0)
+  total          Decimal  @db.Decimal(10,2)
+
+  estado         EstadoVenta @default(Pendiente)
+
+  usuario    Usuario     @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
+  metodoPago MetodoPago? @relation(fields: [cod_metodopago], references: [cod_metodopago], onDelete: Cascade)
+  reserva    Reserva?    @relation(fields: [reserva_id], references: [id_reserva], onDelete: Cascade)
+  caja       Caja?       @relation(fields: [id_caja], references: [id_caja])
+
+  detalles DetalleVenta[]
+
+  @@index([doc_identidad])
+  @@index([cod_metodopago])
+  @@index([reserva_id])
+}
+
+model DetalleVenta {
+  id_detalleventa Int     @id @default(autoincrement()) @db.Int
+  id_venta        Int     @db.Int
+  cod_producto    Int     @db.Int
+  cantidad        Int     @db.Int
+  precio_produc   Decimal @db.Decimal(10,2)
+
+  venta    Venta    @relation(fields: [id_venta], references: [id_venta], onDelete: Cascade)
+  producto Producto @relation(fields: [cod_producto], references: [cod_producto], onDelete: Cascade)
+
+  @@index([id_venta])
+  @@index([cod_producto])
+}
+
+model Movimiento {
+  id_movimiento      Int      @id @default(autoincrement()) @db.Int
+  cod_producto       Int      @db.Int
+  cantidad           Int      @db.Int
+  fecha_registro     DateTime @default(now()) @db.DateTime(0)
+  tipo_movimiento    TipoMovimiento?
+  descrip_movimineto String   @db.Text
+
+  producto Producto @relation(fields: [cod_producto], references: [cod_producto], onDelete: Cascade)
+
+  @@index([cod_producto])
+}
+
+model Cancion {
+  id_cancion    Int    @id @default(autoincrement()) @db.Int
+  doc_identidad Int    @db.Int
+  nombre_can    String @db.Text
+  Link_can      String @db.Text
+  numero_fila   Int    @db.Int
+
+  usuario Usuario @relation(fields: [doc_identidad], references: [doc_identidad], onDelete: Cascade)
+
+  @@index([doc_identidad])
+}
+
+model Auditoria {
+  id_auditoria     Int      @id @default(autoincrement()) @db.Int
+  tabla_afectada   String?  @db.VarChar(50)
+  accion           TipoAccion?
+  usuario_afectado Int?     @db.Int
+  fecha            DateTime @default(now()) @db.DateTime(0)
+  descripcion      String?  @db.Text
+
+  @@index([usuario_afectado])
+}
+
+model Caja {
+
+  id_caja        Int      @id @default(autoincrement())
+  doc_identidad  Int
+
+  monto_inicial  Decimal  @db.Decimal(10,2)
+  monto_final    Decimal? @db.Decimal(10,2)
+
+  estado         EstadoCaja @default(Abierta)
+
+  fecha_apertura DateTime @default(now())
+  fecha_cierre   DateTime?
+
+  usuario Usuario @relation(fields:[doc_identidad], references:[doc_identidad])
+
+  ventas Venta[]
+}
+
+enum EstadoCaja {
+  Abierta
+  Cerrada
+}
+
+enum DiaSemana {
+  Lunes
+  Martes
+  Miercoles
+  Jueves
+  Viernes
+  Sabado
+  Domingo
+}
+
+enum TipoMesa {
+  Normal
+  VIP
+}
+
+enum EstadoReserva {
+  Pendiente
+  Confirmada
+  Cancelada
+}
+
+enum EstadoVenta {
+  Pendiente
+  Pagada
+  Cancelada
+}
+
+enum TipoMovimiento {
+  Entrada
+  Salida
+}
+
+enum TipoAccion {
+  INSERT
+  UPDATE
+  DELETE
+}
+enum EstadoTemporal {
+  Activa
+  Expirada
+}
