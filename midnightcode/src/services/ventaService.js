@@ -1,4 +1,5 @@
 const prisma = require("../config/database");
+const crypto = require("crypto");
 
 const ventaRepository = require("../repositories/ventaRepository");
 const detalleVentaRepository = require("../repositories/detalleVentaRepository");
@@ -47,8 +48,8 @@ class VentaService {
   }
 
   generarCodigoPago(){
-    return Math.floor(100000 + Math.random() * 900000);
-  }
+  return crypto.randomInt(100000, 1000000);
+}
 
   async getAll(user){
 
