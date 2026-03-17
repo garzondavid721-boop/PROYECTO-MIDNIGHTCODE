@@ -17,5 +17,5 @@ jobs:
           uses: sonarsource/sonarqube-scan-action@v2
           env:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-            SONAR_HOST_URL: https://lwwdhd79-9000.use2.devtunnels.ms
+            SONAR_HOST_URL: https://0jcvb7vx-9000.use2.devtunnels.ms
 
