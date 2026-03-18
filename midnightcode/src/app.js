@@ -4,12 +4,8 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const http = require("http");
-const { Server } = require("socket.io");
-const cron = require("node-cron");
 
 /* ---------------- LOGGER ---------------- */
-
 
 const logger = require("./config/logger");
 
@@ -19,13 +15,6 @@ const httpLogger = require("./middlewares/loggerMiddleware");
 /* ---------------- ERROR HANDLER ---------------- */
 
 const errorHandler = require("./middlewares/errorMiddleware");
-
-/* ---------------- JOBS ---------------- */
-
-require("./jobs/liberarReservasJob");
-require("./jobs/limpiarCanciones");
-
-const liberarReservas = require("./jobs/reservaExpirationJob");
 
 /* ---------------- ROUTES ---------------- */
 
@@ -54,6 +43,29 @@ app.use(express.json());
 /* LOG AUTOMÁTICO DE REQUESTS */
 
 app.use(httpLogger);
+
+/* ---------------- CORS DE CONEXION CON EL FRONTEND ---------------- */
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "CUANDO SE PUBLIQUE: URL_DEL_FRONTEND"
+];
+
+app.use(
+  cors({
+    origin: function(origin, callback) {
+      // permitir requests sin origin (como Postman o backend a backend)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true); // dominio permitido
+      } else {
+        callback(new Error("No permitido por CORS"));
+      }
+    },
+    credentials: true
+  })
+);
 
 /* ---------------- ROUTES ---------------- */
 
@@ -90,106 +102,4 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-/* ---------------- SERVER ---------------- */
-
-const server = http.createServer(app);
-
-/* ---------------- CORS DE CONNECCION CON EL FRONTED---------------- */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "CUANDO SE PUBLIQUE: URL_DEL_FRONTEND"
-];
-
-app.use(
-  cors({
-    origin: function(origin, callback) {
-      // permitir requests sin origin (como Postman o backend a backend)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true); // dominio permitido
-      } else {
-        callback(new Error("No permitido por CORS"));
-      }
-    },
-    credentials: true
-  })
-);
-
-
-/* ---------------- SOCKET.IO ---------------- */
-
-const io = new Server(server, {
-  cors: {
-    origin: "*"
-  }
-});
-
-global.io = io;
-
-io.on("connection", (socket) => {
-
-  logger.info({
-    event: "SOCKET_CONECTADO",
-    socket: socket.id
-  });
-
-  socket.on("disconnect", () => {
-
-    logger.info({
-      event: "SOCKET_DESCONECTADO",
-      socket: socket.id
-    });
-
-  });
-
-});
-
-/* ---------------- CRON JOB ---------------- */
-
-/* revisa reservas expiradas cada minuto */
-
-cron.schedule("* * * * *", async () => {
-
-  try {
-
-    logger.info({
-      event: "CRON_VERIFICAR_RESERVAS"
-    });
-
-    await liberarReservas();
-
-  } catch (error) {
-
-    logger.error({
-      event: "ERROR_CRON_RESERVAS",
-      error: error.message
-    });
-
-  }
-
-});
-
-/* ---------------- START SERVER ---------------- */
-
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  logger.info({
-    event: "SERVER_START",
-    port: PORT
-  });
-}).on("error", (err) => {
-
-  if (err.code === "EADDRINUSE") {
-
-    logger.error({
-      event: "PUERTO_OCUPADO",
-      port: PORT
-    });
-
-    process.exit(1);
-
-  }
-
-});
+module.exports = app;
