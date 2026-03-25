@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
-    "test": "jest --coverage --passWithNoTests"
+    "test": "NODE_ENV=test jest --coverage --passWithNoTests"
   },
   "keywords": [],
   "author": "",
