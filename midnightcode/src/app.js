@@ -48,7 +48,7 @@ app.use(httpLogger);
 /* ---------------- CORS DE CONEXION CON EL FRONTEND ---------------- */
 
 const allowedOrigins = [
-  "http://localhost:5173",
+  "http://localhost:3000",
   "CUANDO SE PUBLIQUE: URL_DEL_FRONTEND"
 ];
 
