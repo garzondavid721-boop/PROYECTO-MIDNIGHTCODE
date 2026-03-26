@@ -35,38 +35,33 @@ const cajaRoutes = require("./routes/cajaRoutes");
 
 const app = express();
 
-/* ---------------- MIDDLEWARE GLOBAL ---------------- */
+/* ---------------- CORS (antes de json y rutas) ---------------- */
 
-// app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:80",
+  "http://localhost",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error("No permitido por CORS"));
+    },
+    credentials: true,
+  })
+);
+
+/* ---------------- MIDDLEWARE GLOBAL ---------------- */
 
 app.use(express.json());
 
 /* LOG AUTOMÁTICO DE REQUESTS */
 
 app.use(httpLogger);
-
-/* ---------------- CORS DE CONEXION CON EL FRONTEND ---------------- */
-
-const allowedOrigins = [
-  "http://localhost:5173",
-  "CUANDO SE PUBLIQUE: URL_DEL_FRONTEND"
-];
-
-app.use(
-  cors({
-    origin: function(origin, callback) {
-      // permitir requests sin origin (como Postman o backend a backend)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true); // dominio permitido
-      } else {
-        callback(new Error("No permitido por CORS"));
-      }
-    },
-    credentials: true
-  })
-);
 
 /* ---------------- ROUTES ---------------- */
 

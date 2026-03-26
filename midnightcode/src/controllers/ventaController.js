@@ -1,6 +1,17 @@
 const ventaService = require("../services/ventaService");
 const logger = require("../config/logger");
 
+exports.getToday = async(req,res,next)=>{
+  try{
+    logger.info({ event:"VENTAS_HOY", user:req.user?.id });
+    const ventas = await ventaService.getToday(req.user);
+    res.json(ventas);
+  }catch(err){
+    logger.error({ event:"ERROR_VENTAS_HOY", error:err.message });
+    next(err);
+  }
+};
+
 exports.getAll = async(req,res,next)=>{
   try{
 

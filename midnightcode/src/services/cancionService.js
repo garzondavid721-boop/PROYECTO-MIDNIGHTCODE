@@ -1,4 +1,5 @@
 const axios = require("axios");
+const prisma = require("../config/database");
 const cancionRepository = require("../repositories/cancionRepository");
 
 class CancionService {
@@ -12,14 +13,89 @@ class CancionService {
   }
 
   validarUsuario(user) {
-
     if (!user) {
       const error = new Error("No autenticado");
       error.statusCode = 401;
       throw error;
     }
-
     return this.obtenerRol(user);
+  }
+
+  // ── DJ Queue ────────────────────────────────────────────────────────────────
+
+  async getQueue(user) {
+    this.validarUsuario(user);
+    return await prisma.cancion.findMany({
+      where:   { numero_fila: { gte: -2 } },
+      include: { usuario: { select: { nombre_usu: true } } },
+      orderBy: { numero_fila: 'desc' },
+    });
+  }
+
+  async requestSong({ title, artist, link, genre, message }, user) {
+    const rol = this.validarUsuario(user);
+    if (rol !== 3) {
+      const e = new Error("Solo los usuarios pueden solicitar canciones");
+      e.statusCode = 403; throw e;
+    }
+    const doc    = this.obtenerDocumento(user);
+    const ultima = await cancionRepository.findLast();
+    const fila   = (ultima && ultima.numero_fila >= 1) ? ultima.numero_fila + 1 : 1;
+
+    const cancion = await cancionRepository.create({
+      doc_identidad: doc,
+      nombre_can:    `${title} - ${artist || 'Desconocido'}`,
+      Link_can:      link || '',
+      numero_fila:   fila,
+    });
+
+    const lista = await prisma.cancion.findMany({
+      where:   { numero_fila: { gte: -2 } },
+      include: { usuario: { select: { nombre_usu: true } } },
+    });
+    if (global.io) global.io.emit("colaCanciones", lista);
+
+    return await prisma.cancion.findUnique({
+      where:   { id_cancion: cancion.id_cancion },
+      include: { usuario: { select: { nombre_usu: true } } },
+    });
+  }
+
+  async voteSong(id, user) {
+    this.validarUsuario(user);
+    const cancion = await prisma.cancion.findUnique({ where: { id_cancion: Number(id) } });
+    if (!cancion) {
+      const e = new Error("Canción no encontrada"); e.statusCode = 404; throw e;
+    }
+    return cancion;
+  }
+
+  async changeStatus(id, status, user) {
+    const rol = this.validarUsuario(user);
+    if (rol !== 1 && rol !== 4) {
+      const e = new Error("Solo admin o DJ pueden cambiar el estado");
+      e.statusCode = 403; throw e;
+    }
+
+    const STATUS_FILA = { playing: 0, played: -1, rejected: -2, queued: 1 };
+    const fila = STATUS_FILA[status];
+    if (fila === undefined) {
+      const e = new Error("Estado inválido"); e.statusCode = 400; throw e;
+    }
+
+    const cancion = await prisma.cancion.update({
+      where:   { id_cancion: Number(id) },
+      data:    { numero_fila: fila },
+      include: { usuario: { select: { nombre_usu: true } } },
+    });
+
+    const lista = await prisma.cancion.findMany({
+      where:   { numero_fila: { gte: -2 } },
+      include: { usuario: { select: { nombre_usu: true } } },
+    });
+    if (global.io) global.io.emit("colaCanciones", lista);
+
+    return cancion;
   }
 
   async buscarYoutube(query) {

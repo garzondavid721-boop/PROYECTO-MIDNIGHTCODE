@@ -51,6 +51,34 @@ class VentaService {
   return crypto.randomInt(100000, 1000000);
 }
 
+  async getToday(user){
+
+    const rol = this.validarUsuario(user);
+
+    const start = new Date();
+    start.setHours(0,0,0,0);
+    const end = new Date();
+    end.setHours(23,59,59,999);
+
+    const where = {
+      fecha_venta: { gte: start, lte: end }
+    };
+
+    if(rol !== 1){
+      where.doc_identidad = this.obtenerDocumento(user);
+    }
+
+    return prisma.venta.findMany({
+      where,
+      include:{
+        usuario: true,
+        detalles:{ include:{ producto:true } }
+      },
+      orderBy: { fecha_venta: 'desc' }
+    });
+
+  }
+
   async getAll(user){
 
     const rol = this.validarUsuario(user);

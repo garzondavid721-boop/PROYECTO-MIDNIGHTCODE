@@ -16,6 +16,7 @@ services:
       DB_NAME: midnightcode
       PORT: 3000
       JWT_SECRET: 9fK$2vLmQ8#xT7zP@rW5!uY3cN6*eA1
+      FRONTEND_URL: http://localhost
     depends_on:
       db:
         condition: service_healthy

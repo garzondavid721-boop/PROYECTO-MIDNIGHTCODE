@@ -8,47 +8,49 @@ class AuthController {
 
     try {
 
-      const { correo_usu, password_usu } = req.body;
+      const { email, password } = req.body;
 
-      logger.info({
-        message: "Intento de login",
-        correo: correo_usu,
-        ip: req.ip
-      });
+      logger.info({ message: "Intento de login", email, ip: req.ip });
 
-      /* VALIDACIÓN */
-
-      if (!correo_usu || !password_usu) {
-
-        logger.warn({
-          message: "Login fallido - campos faltantes",
-          correo: correo_usu
-        });
-
+      if (!email || !password) {
         return res.status(400).json({
           success: false,
-          message: "Correo y contraseña son requeridos"
+          message: "Email y contraseña son requeridos",
         });
-
       }
 
-      const result = await authService.login(correo_usu, password_usu);
+      const result = await authService.login(email, password);
 
-      logger.info({
-        message: "Login exitoso",
-        correo: correo_usu
-      });
+      logger.info({ message: "Login exitoso", email });
 
       res.json(result);
 
     } catch (error) {
 
-      logger.error({
-        message: "Error en login",
-        error: error.message,
-        stack: error.stack
-      });
+      logger.error({ message: "Error en login", error: error.message });
+      next(error);
 
+    }
+
+  }
+
+  async register(req, res, next) {
+
+    try {
+
+      const { docId, name, email, phone, password } = req.body;
+
+      logger.info({ message: "Intento de registro", email });
+
+      const result = await authService.register({ docId, name, email, phone, password });
+
+      logger.info({ message: "Registro exitoso", email });
+
+      res.status(201).json(result);
+
+    } catch (error) {
+
+      logger.error({ message: "Error en registro", error: error.message });
       next(error);
 
     }

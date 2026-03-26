@@ -1,6 +1,79 @@
 const cancionService = require("../services/cancionService");
 const logger = require("../config/logger");
 
+// ── Helper: campos DB → frontend ─────────────────────────────────────────────
+const toFrontend = (c) => {
+  const fila = Number(c.numero_fila);
+  let status = 'queued';
+  if (fila === 0)       status = 'playing';
+  else if (fila === -1) status = 'played';
+  else if (fila <= -2)  status = 'rejected';
+
+  const [title, ...rest] = (c.nombre_can || ' - ').split(' - ');
+  return {
+    id:          c.id_cancion,
+    title:       title?.trim() || c.nombre_can,
+    artist:      rest.join(' - ').trim() || 'Desconocido',
+    link:        c.Link_can,
+    votes:       c.votos || 0,
+    status,
+    requestedBy: c.usuario?.nombre_usu || 'Anon',
+    genre:       c.genero  || '',
+    message:     c.mensaje || '',
+    timestamp:   c.createdAt || Date.now(),
+  };
+};
+
+// ── DJ Queue handlers ─────────────────────────────────────────────────────────
+exports.getQueue = async (req, res, next) => {
+  try {
+    const canciones = await cancionService.getQueue(req.user);
+    res.json({ success: true, data: canciones.map(toFrontend) });
+  } catch (err) { next(err); }
+};
+
+exports.requestSong = async (req, res, next) => {
+  try {
+    const cancion = await cancionService.requestSong(req.body, req.user);
+    res.status(201).json({ success: true, data: toFrontend(cancion) });
+  } catch (err) { next(err); }
+};
+
+exports.voteSong = async (req, res, next) => {
+  try {
+    const cancion = await cancionService.voteSong(req.params.id, req.user);
+    res.json({ success: true, data: toFrontend(cancion) });
+  } catch (err) { next(err); }
+};
+
+exports.playSong = async (req, res, next) => {
+  try {
+    const cancion = await cancionService.changeStatus(req.params.id, 'playing', req.user);
+    res.json({ success: true, data: toFrontend(cancion) });
+  } catch (err) { next(err); }
+};
+
+exports.markPlayed = async (req, res, next) => {
+  try {
+    const cancion = await cancionService.changeStatus(req.params.id, 'played', req.user);
+    res.json({ success: true, data: toFrontend(cancion) });
+  } catch (err) { next(err); }
+};
+
+exports.rejectSong = async (req, res, next) => {
+  try {
+    const cancion = await cancionService.changeStatus(req.params.id, 'rejected', req.user);
+    res.json({ success: true, data: toFrontend(cancion) });
+  } catch (err) { next(err); }
+};
+
+exports.restoreSong = async (req, res, next) => {
+  try {
+    const cancion = await cancionService.changeStatus(req.params.id, 'queued', req.user);
+    res.json({ success: true, data: toFrontend(cancion) });
+  } catch (err) { next(err); }
+};
+
 exports.buscarYoutube = async (req, res, next) => {
 
   try {

@@ -190,3 +190,72 @@ exports.delete = async (req, res, next) => {
     next(err);
   }
 };
+
+// ── /me endpoints ─────────────────────────────────────────────────────────────
+const prisma = require("../config/database");
+const bcrypt = require("bcrypt");
+
+const ROLE_MAP = { 1: 'admin', 2: 'empleado', 3: 'usuario', 4: 'dj' };
+
+exports.getMe = async (req, res, next) => {
+  try {
+    const doc  = Number(req.user.id);
+    const user = await prisma.usuario.findUnique({ where: { doc_identidad: doc } });
+    if (!user) return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+
+    res.json({
+      success: true,
+      user: {
+        id:      user.doc_identidad,
+        name:    user.nombre_usu,
+        email:   user.correo_usu,
+        phone:   user.telefono_usu,
+        role:    ROLE_MAP[user.cod_rol] || 'usuario',
+        cod_rol: user.cod_rol,
+      },
+    });
+  } catch (err) { next(err); }
+};
+
+exports.updateMe = async (req, res, next) => {
+  try {
+    const doc  = Number(req.user.id);
+    const data = {};
+    if (req.body.name)  data.nombre_usu   = req.body.name;
+    if (req.body.phone) data.telefono_usu = req.body.phone;
+
+    const updated = await prisma.usuario.update({ where: { doc_identidad: doc }, data });
+
+    res.json({
+      success: true,
+      user: {
+        id:      updated.doc_identidad,
+        name:    updated.nombre_usu,
+        email:   updated.correo_usu,
+        phone:   updated.telefono_usu,
+        role:    ROLE_MAP[updated.cod_rol] || 'usuario',
+        cod_rol: updated.cod_rol,
+      },
+    });
+  } catch (err) { next(err); }
+};
+
+exports.changePassword = async (req, res, next) => {
+  try {
+    const doc  = Number(req.user.id);
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Se requiere currentPassword y newPassword" });
+    }
+
+    const user  = await prisma.usuario.findUnique({ where: { doc_identidad: doc } });
+    const valid = await bcrypt.compare(currentPassword, user.password_usu);
+    if (!valid) return res.status(400).json({ success: false, message: "Contraseña actual incorrecta" });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.usuario.update({ where: { doc_identidad: doc }, data: { password_usu: hashed } });
+
+    res.json({ success: true, message: "Contraseña actualizada" });
+  } catch (err) { next(err); }
+};

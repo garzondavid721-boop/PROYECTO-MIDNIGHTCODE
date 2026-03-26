@@ -4,9 +4,9 @@ const router = express.Router();
 const controller = require("../controllers/ventaController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
-router.get("/",authMiddleware,controller.getAll);
-
-router.get("/pendientes",authMiddleware,controller.getPendientes);
+router.get("/today",     authMiddleware, controller.getToday);
+router.get("/",          authMiddleware, controller.getAll);
+router.get("/pendientes",authMiddleware, controller.getPendientes);
 
 router.get("/codigo/:codigo",authMiddleware,controller.getByCodigo);
 

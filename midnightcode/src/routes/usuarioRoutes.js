@@ -9,13 +9,15 @@ const ownerOrAdmin = require("../middlewares/ownerOrAdmin");
 
 
 
-router.post("/register", controller.register);
-router.post("/login", controller.login);
+// ── Rutas /me (DEBEN ir antes de /:id) ──────────────────────────────────────
+router.get("/me",            authMiddleware, controller.getMe);
+router.patch("/me",          authMiddleware, controller.updateMe);
+router.patch("/me/password", authMiddleware, controller.changePassword);
 
-
+// ── Admin ────────────────────────────────────────────────────────────────────
 router.get("/", authMiddleware, rolMiddleware([1]), controller.getAll);
 
-
+// ── Por ID ───────────────────────────────────────────────────────────────────
 router.get("/:id", authMiddleware, ownerOrAdmin, controller.getById);
 
 
