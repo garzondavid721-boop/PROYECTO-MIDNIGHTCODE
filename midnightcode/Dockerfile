@@ -29,5 +29,7 @@ USER nodeuser
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node src/serve.js "]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed  && node src/serve.js "]
+
+
 # npm install --save-dev jest supertest

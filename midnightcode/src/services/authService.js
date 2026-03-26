@@ -12,13 +12,17 @@ class AuthService {
     });
 
     if (!user) {
-      throw new Error('Credenciales inválidas');
+      const error = new Error("Credenciales inválidas");
+      error.statusCode = 401;
+      throw error;
     }
 
     const match = await bcrypt.compare(password, user.password_usu);
 
     if (!match) {
-      throw new Error('Credenciales inválidas');
+      const error = new Error("Credenciales inválidas");
+      error.statusCode = 401;
+      throw error;
     }
 
     if (!user.rol) {
