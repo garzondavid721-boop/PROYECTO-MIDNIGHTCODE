@@ -48,8 +48,9 @@ app.use(httpLogger);
 /* ---------------- CORS DE CONEXION CON EL FRONTEND ---------------- */
 
 const allowedOrigins = [
-  "http://localhost:3000",
-  "CUANDO SE PUBLIQUE: URL_DEL_FRONTEND"
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://016f18qb-5173.use2.devtunnels.ms"
 ];
 
 app.use(
@@ -58,10 +59,13 @@ app.use(
       // permitir requests sin origin (como Postman o backend a backend)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      const normalizedOrigin = origin.replace(/\/+$/, "");
+      const isAllowedDevTunnel = /^https:\/\/[a-z0-9-]+\.use2\.devtunnels\.ms$/i.test(normalizedOrigin);
+
+      if (allowedOrigins.includes(normalizedOrigin) || isAllowedDevTunnel) {
         callback(null, true); // dominio permitido
       } else {
-        callback(new Error("No permitido por CORS"));
+        callback(new Error(`No permitido por CORS: ${origin}`));
       }
     },
     credentials: true
