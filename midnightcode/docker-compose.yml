@@ -16,6 +16,12 @@ services:
       DB_NAME: midnightcode
       PORT: 3000
       JWT_SECRET: 9fK$2vLmQ8#xT7zP@rW5!uY3cN6*eA1
+
+      JWT_RESET_SECRET: reset_super_secret_123
+      EMAIL_USER: tu_correo@gmail.com
+      EMAIL_PASS: tu_app_password
+      FRONTEND_URL: http://localhost:5173
+    
     depends_on:
       db:
         condition: service_healthy
