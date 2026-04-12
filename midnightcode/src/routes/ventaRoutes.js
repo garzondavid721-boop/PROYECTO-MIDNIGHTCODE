@@ -10,6 +10,8 @@ router.get("/pendientes",authMiddleware,controller.getPendientes);
 
 router.get("/codigo/:codigo",authMiddleware,controller.getByCodigo);
 
+router.get("/mis-ventas", authMiddleware, controller.getMisVentas);
+
 router.get("/:id",authMiddleware,controller.getById);
 
 router.post("/",authMiddleware,controller.create);

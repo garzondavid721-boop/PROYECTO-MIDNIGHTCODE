@@ -29,7 +29,7 @@ class ProductoService {
 
     const rol = this.validarUsuario(user);
 
-    if (rol !== 1 && rol !== 3) {
+    if (rol !== 1 && rol !== 2) {
       const error = new Error("Solo admin o empleado pueden realizar esta acción");
       error.statusCode = 403;
       throw error;

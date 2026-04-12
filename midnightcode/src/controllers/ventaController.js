@@ -24,6 +24,7 @@ exports.getAll = async(req,res,next)=>{
   }
 };
 
+
 exports.getById = async(req,res,next)=>{
   try{
 
@@ -70,6 +71,41 @@ exports.getPendientes = async(req,res,next)=>{
       error:err.message
     });
 
+    next(err);
+  }
+};
+
+
+exports.getMisVentas = async (req, res, next) => {
+  try {
+    logger.info({
+      event: "MIS_VENTAS",
+      user: req.user?.id
+    });
+    const ventas = await ventaService.getMisVentas(req.user);
+    res.json({ success: true, data: ventas });
+  } catch (err) {
+    logger.error({
+      event: "ERROR_MIS_VENTAS",
+      error: err.message
+    });
+    next(err);
+  }
+};
+
+exports.getPendientes = async (req, res, next) => {
+  try {
+    logger.info({
+      event: "VENTAS_PENDIENTES",
+      user: req.user?.id
+    });
+    const ventas = await ventaService.getPendientes(req.user);
+    res.json(ventas);
+  } catch (err) {
+    logger.error({
+      event: "ERROR_VENTAS_PENDIENTES",
+      error: err.message
+    });
     next(err);
   }
 };
