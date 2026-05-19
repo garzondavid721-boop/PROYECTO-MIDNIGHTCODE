@@ -2,31 +2,31 @@ FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+# Copiar package.json desde midnightcode
+COPY midnightcode/package*.json ./
 
 RUN npm ci
 
-# copiar prisma schema
-COPY prisma ./prisma
+# Copiar prisma desde midnightcode
+COPY midnightcode/prisma ./prisma
 
-# copiar código fuente
-COPY src ./src
+# Copiar src desde midnightcode
+COPY midnightcode/src ./src
+
+# Copiar tests (si es necesario para el build)
+COPY midnightcode/tests ./tests
 
 # generar cliente prisma
 RUN npx prisma generate
 
-# Segunda etapa para producción
 FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
-# Copiar desde builder
 COPY --from=builder /usr/src/app /usr/src/app
 
-# Instalar solo dependencias de producción
 RUN npm prune --production
 
-# Crear usuario no root
 RUN addgroup -S nodejs && adduser -S nodeuser -G nodejs
 USER nodeuser
 
