@@ -2,19 +2,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
-# Copiar package.json desde midnightcode
-COPY midnightcode/package*.json ./
+# Copiar package.json desde el mismo directorio (midnightcode)
+COPY package*.json ./
 
 RUN npm ci
 
-# Copiar prisma desde midnightcode
-COPY midnightcode/prisma ./prisma
+# Copiar prisma desde el mismo directorio
+COPY prisma ./prisma
 
-# Copiar src desde midnightcode
-COPY midnightcode/src ./src
-
-# Copiar tests (si es necesario para el build)
-COPY midnightcode/tests ./tests
+# Copiar src desde el mismo directorio  
+COPY src ./src
 
 # generar cliente prisma
 RUN npx prisma generate
